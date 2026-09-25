@@ -1,0 +1,206 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>SkillFlow — Build Guide (SIH26097)</h1>
+<p><em>AI-Driven Voice Assistant for Livelihood Mapping &amp; NSQF-Aligned Skilling — PM-AJAY GIA</em></p>
+<p>Scope: internal-hackathon-ready MVP, buildable by a 6-person team in ~6 days.</p>
+<hr>
+<h2>1. The One-Line Product</h2>
+<p>A person speaks about their life in Hindi or English. The AI has a natural back-and-forth conversation, builds a structured profile of them, finds their skill gaps, and recommends NSQF-aligned training and livelihood paths — with a clear &quot;why&quot; — ending in a simple roadmap.</p>
+<p><strong>Demo proof point:</strong> voice in → adaptive conversation → structured profile → skill-gap → explainable recommendation → roadmap. Nothing else is required to win the internal round.</p>
+<hr>
+<h2>2. Feature List</h2>
+<h3>Build (MVP — all 6 days go here)</h3>
+<ul>
+<li>Voice input (mic) with <strong>text-input fallback</strong> always visible</li>
+<li>Speech-to-Text → LLM conversation engine → Text-to-Speech</li>
+<li>2 languages: Hindi + English (add Marathi only if time and STT/TTS quality allow)</li>
+<li>Adaptive interview — LLM decides the next question based on what's already known, doesn't re-ask</li>
+<li>Structured JSON extraction after every turn (education, occupation, experience, skills, interests, mobility constraints, employment preference, location)</li>
+<li>Curated NSQF-aligned dataset (15–25 trades/roles) with skills, sector, description, eligibility</li>
+<li>Matching/skill-gap engine (keyword or embedding similarity against the dataset)</li>
+<li>Explainable recommendations (top 3, each with a short &quot;why&quot; grounded in the matched data)</li>
+<li>Simple roadmap visual: current skill → training → certification → livelihood</li>
+<li>One results screen showing all of the above</li>
+</ul>
+<h3>Explicitly out of scope (say it's &quot;future scope&quot; in the PPT, don't build it)</h3>
+<ul>
+<li>IVR / phone call access</li>
+<li>WhatsApp voice workflow</li>
+<li>Admin analytics dashboard</li>
+<li>Geographic livelihood map</li>
+<li>Live government/labour-market data integration</li>
+<li>3+ languages, dialect variation</li>
+</ul>
+<hr>
+<h2>3. How It Should Work (flow)</h2>
+<pre><code>User opens app → picks language → taps &#34;Start Interview&#34;
+      ↓
+AI asks first open question (education/work) — spoken + shown as text
+      ↓
+User answers by voice (or types as fallback)
+      ↓
+STT transcribes → LLM call #1: extract/update structured profile JSON
+      ↓
+LLM call #2 (or same call): decide next question based on what&#39;s missing
+      ↓
+TTS speaks the next question → loop until profile has enough fields (~5–8 turns)
+      ↓
+&#34;Generating your profile…&#34; (brief AI processing state, not instant — feels real)
+      ↓
+Match profile against NSQF dataset → compute skill gaps → generate top-3 recs + &#34;why&#34;
+      ↓
+Results screen: Profile summary → Skill chart → Skill gaps → Recommendations → Roadmap
+</code></pre>
+<p>Keep the interview to <strong>5–8 questions</strong>. Longer feels like a form, not a conversation — the PS explicitly wants it to <em>not</em> feel like a form.</p>
+<hr>
+<h2>4. Screens &amp; Look</h2>
+<p>Keep the visual language warm, human, and simple — this is for someone who may have limited literacy/digital exposure, not a SaaS dashboard.</p>
+<p><strong>Design direction:</strong></p>
+<ul>
+<li>Large touch targets, big readable text, minimal chrome</li>
+<li>Warm, approachable palette (not corporate blue-and-white) — think terracotta/saffron + deep teal, or similar earthy tones that read as Indian-government-but-friendly, not sterile</li>
+<li>One primary action visible at a time — don't show 10 options on one screen</li>
+<li>Icons/illustrations over dense text wherever possible</li>
+<li>Every screen must survive being read aloud — captions under any AI speech bubble</li>
+</ul>
+<p><strong>Screen 1 — Language + Start</strong>
+Big language toggle (हिंदी / English), one clear &quot;Start Interview&quot; button, one line explaining what happens next.</p>
+<p><strong>Screen 2 — Interview</strong>
+Chat-style: AI bubble (with a speaker icon replaying audio) + user bubble. Mic button large and centered. Live transcript appears as the user speaks. Text input always available below the mic, not hidden in a menu.</p>
+<p><strong>Screen 3 — Processing (brief, 2–3 sec)</strong>
+&quot;Building your profile…&quot; with a simple progress indicator. This isn't just polish — it gives you a natural beat to run the matching logic.</p>
+<p><strong>Screen 4 — Results</strong></p>
+<ul>
+<li>Card 1: Profile summary (education, occupation, experience, goal, location)</li>
+<li>Card 2: Skill bars (current skills, simple horizontal bars)</li>
+<li>Card 3: Skill gaps (2–4 flagged items with a short icon + label)</li>
+<li>Card 4: Top 3 recommendations, each with a match note (&quot;Why this: matches your tailoring experience, supports self-employment goal, addresses your digital-skills gap&quot;)</li>
+<li>Card 5: Roadmap — a simple horizontal step diagram (Current → Training → Certification → Livelihood)</li>
+</ul>
+<p>Don't build a separate admin dashboard screen for the MVP — if you want one visual &quot;impact&quot; slide, do it as a static mockup in the PPT instead of live code.</p>
+<hr>
+<h2>5. Data &amp; Prompt Design</h2>
+<h3>5.1 Profile schema</h3>
+<pre><code class="language-json">{
+  &#34;education&#34;: &#34;12th&#34;,
+  &#34;current_occupation&#34;: &#34;Tailoring&#34;,
+  &#34;experience_years&#34;: 3,
+  &#34;skills&#34;: [&#34;Sewing&#34;, &#34;Tailoring&#34;, &#34;Alteration&#34;],
+  &#34;interests&#34;: [&#34;Fashion design&#34;],
+  &#34;mobility_constraint&#34;: &#34;Home-based preferred&#34;,
+  &#34;employment_preference&#34;: &#34;Self-employment&#34;,
+  &#34;location&#34;: &#34;Mumbai&#34;
+}
+</code></pre>
+<h3>5.2 NSQF dataset entry schema</h3>
+<pre><code class="language-json">{
+  &#34;id&#34;: &#34;T-014&#34;,
+  &#34;title&#34;: &#34;Digital Entrepreneurship for Apparel Makers&#34;,
+  &#34;nsqf_level&#34;: 4,
+  &#34;sector&#34;: &#34;Apparel &amp; Textiles&#34;,
+  &#34;required_skills&#34;: [&#34;Tailoring&#34;, &#34;Basic digital literacy&#34;],
+  &#34;gap_skills_covered&#34;: [&#34;Digital marketing&#34;, &#34;Online selling&#34;],
+  &#34;eligibility&#34;: &#34;10th pass or equivalent experience&#34;,
+  &#34;duration&#34;: &#34;6 weeks&#34;,
+  &#34;description&#34;: &#34;Short one-line description of the pathway.&#34;,
+  &#34;source&#34;: &#34;curated reference — cite where it came from&#34;,
+  &#34;last_verified&#34;: &#34;2026-09-24&#34;
+}
+</code></pre>
+<p>Spend real time on this dataset (Person 4's job) — 15–25 well-written entries across 3–4 sectors (tailoring/textiles, agriculture, carpentry, handicrafts, retail/digital) will cover most demo personas convincingly. Quality here matters more than any UI polish.</p>
+<h3>5.3 Conversation-engine system prompt (starting point)</h3>
+<pre><code>You are a warm, patient livelihood counsellor conducting a spoken interview
+in {language}. Collect: education, current occupation, years of experience,
+skills (formal and informal), interests, mobility/physical constraints,
+employment preference (wage/self-employment/either), and location.
+
+Rules:
+- Ask ONE question at a time, conversationally, never like a form.
+- Never re-ask something already known from the profile-so-far.
+- If the user&#39;s last answer implies a field, extract it silently — don&#39;t
+  interrogate about things you can infer.
+- After 5-8 questions, or once all fields are reasonably filled, stop and
+  say the interview is complete.
+
+Given the conversation so far and the current profile JSON, return:
+1. The next spoken question (or a closing line if done), in {language}.
+2. The updated profile JSON.
+</code></pre>
+<p>Have this return structured output (JSON) on every call — this is what makes extraction reliable instead of regex-parsing free text.</p>
+<h3>5.4 Recommendation &quot;why&quot; prompt</h3>
+<p>Feed the LLM: the user's profile JSON + the top-matched dataset entries (not the whole dataset). Ask it to write one short, specific sentence per recommendation, grounded only in the fields provided — this keeps it explainable and stops it from inventing claims.</p>
+<hr>
+<h2>6. Architecture (text diagram)</h2>
+<pre><code>Browser (mic + text fallback)
+   → STT (Web Speech API, or Whisper API if accuracy needs it)
+   → Backend API (FastAPI/Node — your choice)
+        → Conversation Engine (LLM call, structured JSON out)
+        → Extraction merges into session profile
+        → On interview completion:
+             Matching Engine (profile vs NSQF dataset JSON)
+             → Skill-gap list
+             → Recommendation Engine (LLM call using matched entries)
+   → TTS (for AI questions + optional &#34;read recommendations aloud&#34;)
+   → Frontend renders results screen
+</code></pre>
+<p>Keep state in-memory or a simple session store per interview — you don't need a full database for a demo.</p>
+<hr>
+<h2>7. Team Split (recap, 6 people)</h2>
+<table>
+<thead>
+<tr>
+<th>Owner</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Frontend shell, voice recorder UI, results screen layout</td>
+</tr>
+<tr>
+<td>2</td>
+<td>STT/TTS integration, language switching</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Conversation engine + extraction prompt</td>
+</tr>
+<tr>
+<td>4</td>
+<td>NSQF dataset (the highest-leverage, most time-consuming task)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Matching logic + recommendation &quot;why&quot; generation + roadmap visual</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Integration, demo-day fallback plan, PPT, pitch script</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>8. 6-Day Plan</h2>
+<ul>
+<li><strong>Day 1</strong> — Dataset schema + first 15 entries. Repo setup. Basic mic → text loop working.</li>
+<li><strong>Day 2</strong> — Conversation engine returns next-question + profile JSON. One language fully working end-to-end.</li>
+<li><strong>Day 3</strong> — Matching + skill-gap logic against dataset. Second language if time allows.</li>
+<li><strong>Day 4</strong> — Results screen: profile, skill bars, gaps, recommendations, roadmap.</li>
+<li><strong>Day 5</strong> — Full integration test, demo-day fallbacks (offline text mode, backup recorded video), bug bash.</li>
+<li><strong>Day 6</strong> — PPT, pitch rehearsal (3 minutes), stop touching code.</li>
+</ul>
+<hr>
+<h2>9. Judge-Proofing Checklist</h2>
+<ul>
+<li>Never claim live government data — say &quot;curated, government-aligned knowledge base&quot;</li>
+<li>Never claim guaranteed employment outcomes</li>
+<li>Have a <strong>recorded backup demo video</strong> in case mic/Wi-Fi fails on stage</li>
+<li>Text-input fallback must always be visible, not a hidden option</li>
+<li>Be ready to explain <em>why</em> each recommendation was made, live, for a persona the judges invent on the spot</li>
+<li>Keep one slide honestly listing what's MVP vs. future scope — shows maturity, not weakness</li>
+</ul>
+<hr>
+<p>Next useful things I can help build directly: the actual LLM system prompt code, the NSQF dataset starter JSON, or the results-screen UI as a working prototype.</p>
+
+</body></html>
