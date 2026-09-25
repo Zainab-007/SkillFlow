@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.knowledge import router
+from app.routes.conversation import router as conversation_router
 from app.services.knowledge_base import get_knowledge_base
 
 # ---------------------------------------------------------------------------
@@ -89,3 +90,4 @@ app.add_middleware(
 # Routers
 # ---------------------------------------------------------------------------
 app.include_router(router, prefix="/api")
+app.include_router(conversation_router, prefix="/api")
