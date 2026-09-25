@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WelcomePage from './pages/WelcomePage';
 import InterviewPage from './pages/InterviewPage';
 import ResultsPage from './pages/ResultsPage';
+import { fetchRecommendations } from './services/api';
 
 /**
  * SkillFlow Main Application Component.
@@ -12,6 +13,9 @@ export default function App() {
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
   const [sessionId, setSessionId] = useState('');
   const [finalProfile, setFinalProfile] = useState({});
+  const [recommendations, setRecommendations] = useState([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState(null);
 
   // Sync html lang attribute
   useEffect(() => {
@@ -21,19 +25,54 @@ export default function App() {
   const handleStartConversation = () => {
     const newSessionId = `skillflow-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     setSessionId(newSessionId);
+    setRecommendations([]);
+    setRecommendationsError(null);
     setCurrentPage('interview');
   };
 
-  const handleInterviewComplete = (collectedProfile) => {
+  const handleInterviewComplete = async (collectedProfile) => {
     setFinalProfile(collectedProfile);
     setCurrentPage('results');
+    setIsLoadingRecommendations(true);
+    setRecommendationsError(null);
+
+    try {
+      const data = await fetchRecommendations(collectedProfile);
+      setRecommendations(data.recommendations || []);
+    } catch (err) {
+      setRecommendationsError(
+        err.message || 'Could not load recommended pathways. Please try again.'
+      );
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  const handleRetryRecommendations = async () => {
+    if (!finalProfile) return;
+    setIsLoadingRecommendations(true);
+    setRecommendationsError(null);
+    try {
+      const data = await fetchRecommendations(finalProfile);
+      setRecommendations(data.recommendations || []);
+    } catch (err) {
+      setRecommendationsError(
+        err.message || 'Could not load recommended pathways. Please try again.'
+      );
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
   };
 
   const handleResetToWelcome = () => {
     setCurrentPage('welcome');
     setSessionId('');
     setFinalProfile({});
+    setRecommendations([]);
+    setRecommendationsError(null);
+    setIsLoadingRecommendations(false);
   };
+
 
   return (
     <div className="app-container">
@@ -103,10 +142,15 @@ export default function App() {
         {currentPage === 'results' && (
           <ResultsPage
             profile={finalProfile}
+            recommendations={recommendations}
+            isLoading={isLoadingRecommendations}
+            error={recommendationsError}
             language={language}
             onRestart={handleResetToWelcome}
+            onRetry={handleRetryRecommendations}
           />
         )}
+
       </main>
     </div>
   );

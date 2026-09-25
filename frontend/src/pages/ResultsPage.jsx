@@ -1,139 +1,140 @@
 import React from 'react';
 
 /**
- * ResultsPage component (Phase 1 Placeholder).
- * Displays the accumulated profile in a human-readable summary
- * and a placeholder indicating recommendation pathways will follow.
+ * ResultsPage component.
+ * Displays top 3 explainable NSQF recommendations, grounded explanations,
+ * skill-gap analysis, and verified training roadmaps.
  *
  * @param {Object} props
  * @param {Object} props.profile - Accumulated livelihood profile from session
+ * @param {Array<Object>} props.recommendations - Top recommended roles from /api/recommendations
+ * @param {boolean} props.isLoading - Whether recommendations are loading
+ * @param {string|null} props.error - Error message if fetch failed
  * @param {string} props.language - 'en' or 'hi'
  * @param {function(): void} props.onRestart - Restart interview callback
+ * @param {function(): void} [props.onRetry] - Retry recommendations callback
  */
-export default function ResultsPage({ profile = {}, language = 'en', onRestart }) {
+export default function ResultsPage({
+  profile = {},
+  recommendations = [],
+  isLoading = false,
+  error = null,
+  language = 'en',
+  onRestart,
+  onRetry,
+}) {
   const isHindi = language === 'hi';
 
-  const formatList = (val) => {
-    if (Array.isArray(val) && val.length > 0) {
-      return val;
-    }
-    return null;
-  };
+  // 1. Loading State ("Finding pathways for you...")
+  if (isLoading) {
+    return (
+      <div className="results-card" role="status" aria-live="polite">
+        <div className="pathways-loading-state">
+          <div className="loading-radar-ring" />
+          <h2 className="loading-headline">
+            {isHindi ? 'आपके लिए आजीविका मार्ग खोज रहे हैं...' : 'Finding pathways for you...'}
+          </h2>
+          <p className="loading-subtext">
+            {isHindi
+              ? 'आपकी बातचीत, कौशल और प्राथमिकताओं का 20 राष्ट्रीय व्यावसायिक योग्यताओं (NSQF) के साथ विश्लेषण किया जा रहा है।'
+              : 'Analysing your profile, skills, and preferences against accredited NSQF vocational pathways.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const skillsList = formatList(profile.skills);
-  const interestsList = formatList(profile.interests);
+  // Helper for formatting list
+  const formatList = (val) => (Array.isArray(val) && val.length > 0 ? val : null);
+  const userSkills = formatList(profile.skills);
 
   return (
     <div className="results-card" aria-labelledby="results-title">
+      {/* Top Banner Header */}
       <header className="results-header">
         <div className="results-badge">
           <span>✓</span>
-          <span>{isHindi ? 'प्रोफ़ाइल तैयार है' : 'Assessment Complete'}</span>
+          <span>{isHindi ? 'सिफ़ारिशें तैयार हैं' : 'Pathways Ready'}</span>
         </div>
         <h1 id="results-title" className="results-title">
-          {isHindi ? 'आपकी स्किलफ्लो प्रोफ़ाइल' : 'Your SkillFlow profile is ready.'}
+          {isHindi ? 'आपके स्किलफ्लो आजीविका मार्ग' : 'Your SkillFlow Pathways'}
         </h1>
         <p className="results-subtitle">
           {isHindi
-            ? 'आपकी बातचीत के आधार पर तैयार की गई आजीविका प्रोफ़ाइल'
-            : 'Livelihood profile synthesized from your conversation'}
+            ? 'आपके कौशल, अनुभव और प्राथमिकताओं के आधार पर तैयार की गई सिफ़ारिशें'
+            : 'Based on your skills, experience and preferences'}
         </p>
       </header>
 
-      {/* Human-readable profile summary grid */}
-      <section className="profile-summary-grid">
-        <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'वर्तमान कार्य' : 'Current Work'}
+      {/* Error state if recommendation fetch encountered an issue */}
+      {error && (
+        <div className="error-banner" role="alert">
+          <div>
+            <strong>{isHindi ? 'त्रुटि:' : 'Notice:'}</strong> {error}
           </div>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              style={{ textDecoration: 'underline', fontWeight: 600 }}
+            >
+              {isHindi ? 'पुनः प्रयास करें' : 'Retry'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Compact Profile Summary Strip */}
+      <section
+        className="profile-summary-grid"
+        style={{ marginBottom: '2.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
+      >
+        <div className="summary-card">
+          <div className="summary-card-label">{isHindi ? 'वर्तमान कार्य' : 'Current Work'}</div>
           <div className="summary-card-value">
             {profile.current_occupation || (isHindi ? 'उल्लेख नहीं' : 'Not specified')}
           </div>
         </div>
 
         <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'कार्य अनुभव' : 'Experience'}
-          </div>
+          <div className="summary-card-label">{isHindi ? 'कार्य अनुभव' : 'Experience'}</div>
           <div className="summary-card-value">
             {profile.experience_years !== undefined && profile.experience_years !== null
               ? `${profile.experience_years} ${isHindi ? 'वर्ष' : 'years'}`
               : isHindi
-                ? 'उल्लेख नहीं'
-                : 'Not specified'}
+                ? 'शुरुआती'
+                : 'Entry / None'}
           </div>
         </div>
 
         <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'शिक्षा' : 'Education'}
-          </div>
+          <div className="summary-card-label">{isHindi ? 'शिक्षा' : 'Education'}</div>
           <div className="summary-card-value">
             {profile.education || (isHindi ? 'उल्लेख नहीं' : 'Not specified')}
           </div>
         </div>
 
         <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'स्थान' : 'Location'}
-          </div>
+          <div className="summary-card-label">{isHindi ? 'स्थान' : 'Location'}</div>
           <div className="summary-card-value">
             {profile.location || (isHindi ? 'उल्लेख नहीं' : 'Not specified')}
           </div>
         </div>
 
         <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'रोजगार प्राथमिकता' : 'Work Preference'}
-          </div>
+          <div className="summary-card-label">{isHindi ? 'कार्य प्राथमिकता' : 'Preference'}</div>
           <div className="summary-card-value">
-            {profile.employment_preference || (isHindi ? 'उल्लेख नहीं' : 'Not specified')}
+            {profile.employment_preference || (isHindi ? 'सामान्य' : 'Flexible')}
           </div>
         </div>
 
-        <div className="summary-card">
-          <div className="summary-card-label">
-            {isHindi ? 'कार्य परिवेश / गतिशीलता' : 'Work Setting'}
-          </div>
-          <div className="summary-card-value">
-            {profile.mobility_constraint || (isHindi ? 'सामान्य' : 'Flexible')}
-          </div>
-        </div>
-
-        {/* Skills */}
-        <div className="summary-card" style={{ gridColumn: '1 / -1' }}>
-          <div className="summary-card-label">
-            {isHindi ? 'दर्ज कौशल एवं हुनर' : 'Skills'}
-          </div>
-          {skillsList ? (
-            <div className="summary-card-pills">
-              {skillsList.map((skill, idx) => (
-                <span key={`${skill}-${idx}`} className="skill-pill">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="summary-card-value">
-              {isHindi ? 'कोई कौशल दर्ज नहीं' : 'No specific skills recorded'}
-            </div>
-          )}
-        </div>
-
-        {/* Interests */}
-        {interestsList && (
+        {userSkills && (
           <div className="summary-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="summary-card-label">
-              {isHindi ? 'रुचियां एवं पसंदीदा क्षेत्र' : 'Interests'}
-            </div>
+            <div className="summary-card-label">{isHindi ? 'दर्ज कौशल' : 'Recorded Skills'}</div>
             <div className="summary-card-pills">
-              {interestsList.map((interest, idx) => (
-                <span
-                  key={`${interest}-${idx}`}
-                  className="skill-pill"
-                  style={{ background: 'var(--emerald-50)', color: 'var(--emerald-600)' }}
-                >
-                  {interest}
+              {userSkills.map((s, idx) => (
+                <span key={`${s}-${idx}`} className="skill-pill">
+                  {s}
                 </span>
               ))}
             </div>
@@ -141,16 +142,165 @@ export default function ResultsPage({ profile = {}, language = 'en', onRestart }
         )}
       </section>
 
-      {/* Next steps notice — matching connected in subsequent phase */}
-      <section className="next-steps-banner">
-        <h4>{isHindi ? 'प्रशिक्षण एवं आजीविका सिफ़ारिशें' : 'Recommendations coming next.'}</h4>
-        <p>
-          {isHindi
-            ? 'पीएम-अजय (PM-AJAY) के तहत 20 राष्ट्रीय कौशल योग्यता फ्रेमवर्क (NSQF) भूमिकाओं के साथ मिलान अगले चरण में उपलब्ध कराया जाएगा।'
-            : 'NSQF-aligned livelihood and skill pathway matching will be presented here in the next milestone.'}
-        </p>
+      {/* Top 3 Recommendations Section */}
+      <section className="recommendations-section">
+        <div className="recommendations-header-wrap">
+          <h2 className="recommendations-title">
+            <span>🎯</span>
+            <span>{isHindi ? 'शीर्ष अनुशंसित भूमिकाएं (Top 3)' : 'Top 3 Recommended Roles'}</span>
+          </h2>
+          <p className="recommendations-subtitle">
+            {isHindi
+              ? 'राष्ट्रीय कौशल योग्यता फ्रेमवर्क (NSQF) के अंतर्गत सरकारी मान्यता प्राप्त भूमिकाएं'
+              : 'Accredited government-aligned NSQF vocational pathways matching your background'}
+          </p>
+        </div>
+
+        {recommendations && recommendations.length > 0 ? (
+          <div className="recommendations-list">
+            {recommendations.map((rec, index) => {
+              const isFirst = index === 0;
+              const matchPct = rec.match_percentage || Math.round(rec.match_score * 100);
+              const scoreClass = matchPct >= 65 ? 'high' : 'medium';
+
+              return (
+                <article
+                  key={rec.role_id}
+                  className={`recommendation-card ${isFirst ? 'rank-1' : ''}`}
+                  aria-labelledby={`role-title-${rec.role_id}`}
+                >
+                  {/* Top Bar with Title and Match Badge */}
+                  <div className="card-top-bar">
+                    <div className="role-title-wrap">
+                      <span className="role-rank-badge">
+                        #{index + 1} {isHindi ? 'अनुशंसा' : 'Match'}
+                      </span>
+                      <h3 id={`role-title-${rec.role_id}`} className="role-name">
+                        {rec.role_title}
+                      </h3>
+                      <div className="card-meta-chips">
+                        <span className="chip-sector">{rec.sector}</span>
+                        <span className="chip-nsqf">NSQF Level {rec.nsqf_level}</span>
+                        <span className="chip-sector" style={{ fontSize: '0.75rem' }}>
+                          QP: {rec.pathway?.qp_code || rec.role_id}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={`match-percentage-badge ${scoreClass}`}>
+                      <span>★</span>
+                      <span>{matchPct}% {isHindi ? 'मैच' : 'Match'}</span>
+                    </div>
+                  </div>
+
+                  {/* Grounded Explanation */}
+                  <div className="role-explanation">
+                    <strong>{isHindi ? 'यह भूमिका आपके लिए क्यों उपयुक्त है: ' : 'Why this role matches: '}</strong>
+                    {rec.explanation}
+                  </div>
+
+                  {/* Skills Comparison: Already Have vs To Develop */}
+                  <div className="skills-comparison-grid">
+                    {/* Skills already have */}
+                    <div className="skills-subgroup">
+                      <div className="subgroup-heading have">
+                        <span>✓</span>
+                        <span>{isHindi ? 'आपके पास मौजूद कौशल' : 'Skills You Already Have'}</span>
+                      </div>
+                      <div className="pills-cluster">
+                        {rec.skills_already_have && rec.skills_already_have.length > 0 ? (
+                          rec.skills_already_have.map((skill, sIdx) => (
+                            <span key={`have-${skill}-${sIdx}`} className="skill-tag have">
+                              {skill}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>
+                            {isHindi ? 'फाउंडेशन स्तर से प्रशिक्षण शुरू होगा' : 'Foundation training will cover core basics'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Skills to develop */}
+                    <div className="skills-subgroup">
+                      <div className="subgroup-heading gap">
+                        <span>▲</span>
+                        <span>{isHindi ? 'प्रशिक्षण द्वारा विकसित करने योग्य कौशल' : 'Skills to Develop (Gap)'}</span>
+                      </div>
+                      <div className="pills-cluster">
+                        {rec.skills_to_develop && rec.skills_to_develop.length > 0 ? (
+                          rec.skills_to_develop.map((skill, gIdx) => (
+                            <span key={`gap-${skill}-${gIdx}`} className="skill-tag gap">
+                              {skill}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>
+                            {isHindi ? 'सभी मुख्य कौशल पूरे हैं' : 'All baseline skills demonstrated'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pathway Roadmap & Certification Details */}
+                  {rec.pathway && (
+                    <div className="pathway-roadmap-box">
+                      <div className="roadmap-header">
+                        <span>🎓</span>
+                        <span>{isHindi ? 'प्रशिक्षण एवं प्रमाणन मार्ग' : 'Training & Certification Roadmap'}</span>
+                      </div>
+
+                      <div className="roadmap-details-grid">
+                        <div>
+                          <div className="roadmap-item-label">{isHindi ? 'योग्यता प्रमाण पत्र' : 'Qualification'}</div>
+                          <div className="roadmap-item-value">{rec.pathway.qualification}</div>
+                        </div>
+
+                        <div>
+                          <div className="roadmap-item-label">{isHindi ? 'पात्रता' : 'Eligibility'}</div>
+                          <div className="roadmap-item-value">{rec.pathway.eligibility}</div>
+                        </div>
+
+                        <div>
+                          <div className="roadmap-item-label">{isHindi ? 'अवधि / प्रारूप' : 'Duration / Format'}</div>
+                          <div className="roadmap-item-value">{rec.pathway.duration}</div>
+                        </div>
+
+                        <div>
+                          <div className="roadmap-item-label">{isHindi ? 'संबद्ध संस्था' : 'Awarding Body'}</div>
+                          <div className="roadmap-item-value">{rec.pathway.organization}</div>
+                        </div>
+                      </div>
+
+                      {rec.pathway.url && (
+                        <a
+                          href={rec.pathway.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pathway-source-link"
+                        >
+                          <span>🔗</span>
+                          <span>{isHindi ? 'आधिकारिक स्रोत एवं विवरण देखें' : 'View official qualification document'}</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--slate-500)' }}>
+            {isHindi
+              ? 'दिए गए विवरण के लिए कोई विशिष्ट भूमिका मेल नहीं खाती। कृपया अधिक जानकारी के साथ पुनः प्रयास करें।'
+              : 'No matching roles found for this profile. Please try starting a new interview with more skill details.'}
+          </div>
+        )}
       </section>
 
+      {/* Action Buttons */}
       <div className="results-actions">
         <button
           type="button"

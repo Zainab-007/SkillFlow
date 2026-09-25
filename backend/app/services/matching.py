@@ -74,6 +74,8 @@ class MatchResult:
         Final weighted score in the range [0.0, 1.0].
     matched_skills : list[str]
         Required skills the user already has.
+    matched_interests : list[str]
+        Interests of the user that align with this role or sector.
     skill_gaps : list[str]
         Skills covered by the training that the user does not yet have.
     employment_type : list[str]
@@ -86,14 +88,79 @@ class MatchResult:
     nsqf_level: float
     score: float
     matched_skills: list[str] = field(default_factory=list)
+    matched_interests: list[str] = field(default_factory=list)
     skill_gaps: list[str] = field(default_factory=list)
     employment_type: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Internal helpers & normalisation
 # ---------------------------------------------------------------------------
 _PUNCT_TABLE = str.maketrans("", "", string.punctuation)
+
+# Curated, deterministic skill and domain synonym clusters
+# Normalises common variations across English, Hindi, and vernacular terms
+# without arbitrary or invented synonyms.
+SKILL_SYNONYMS: dict[str, set[str]] = {
+    # Apparel & Textiles
+    "sewing": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "sewing machine", "cutting", "सिलाई", "दर्जी", "कपड़े", "कटाई"},
+    "stitching": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "sewing machine", "cutting", "सिलाई"},
+    "silayi": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "सिलाई"},
+    "silai": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "सिलाई"},
+    "tailoring": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "alteration", "pattern making", "सिलाई", "दर्जी"},
+    "garment making": {"sewing", "stitching", "tailoring", "garment making", "apparel", "सिलाई", "कपड़े"},
+    "weaving": {"weaving", "handloom", "bunai", "weaver", "loom operation", "बुनाई", "हथकरघा"},
+    "handloom": {"weaving", "handloom", "bunai", "weaver", "हथकरघा", "बुनाई"},
+    "सिलाई": {"sewing", "stitching", "silayi", "silai", "tailoring", "garment making", "sewing machine", "cutting", "सिलाई", "दर्जी", "alteration", "pattern making", "fabric handling"},
+    "दर्जी": {"sewing", "stitching", "tailoring", "garment making", "सिलाई", "दर्जी"},
+    "बुनाई": {"weaving", "handloom", "bunai", "weaver", "बुनाई", "हथकरघा"},
+
+    # Food Processing
+    "cooking": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना", "खाना बनाना", "खाना पकाना", "रसोई", "भोजन"},
+    "home cooking": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "खाना बनाना", "खाना पकाना"},
+    "food handling": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "hygiene practices", "खाना बनाना", "खाना पकाना", "खाद्य"},
+    "food preparation": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "खाना बनाना"},
+    "खाना बनाना": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना बनाना", "खाना पकाना"},
+    "खाना पकाना": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना बनाना", "खाना पकाना"},
+    "खाना": {"cooking", "home cooking", "food handling", "food preparation", "खाना बनाना", "खाना पकाना"},
+    "रसोई": {"cooking", "home cooking", "food handling", "kitchen work"},
+
+    # Agriculture & Allied
+    "farming": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "cultivator", "खेती", "कृषि", "फसल"},
+    "kheti": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "खेती", "कृषि"},
+    "cultivation": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "cultivator", "खेती", "कृषि"},
+    "organic farming": {"organic farming", "organic grower", "farming", "cultivation", "जैविक खेती"},
+    "खेती": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "cultivator", "खेती", "कृषि"},
+    "कृषि": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "cultivator", "खेती", "कृषि"},
+
+    # Carpentry, Construction & Trades
+    "carpentry": {"carpentry", "woodwork", "furniture making", "carpenter", "wood cutting", "barhai", "बढ़ई", "लकड़ी"},
+    "woodwork": {"carpentry", "woodwork", "furniture making", "carpenter", "बढ़ई"},
+    "plumbing": {"plumbing", "pipe fitting", "plumber", "water fitting", "pipe repair", "प्लंबर", "नलसाजी"},
+    "बढ़ई": {"carpentry", "woodwork", "furniture making", "carpenter"},
+    "प्लंबर": {"plumbing", "pipe fitting", "plumber"},
+
+    # Beauty & Wellness
+    "beauty": {"beauty", "makeup", "parlour", "skin care", "beautician", "therapist", "beauty therapist", "ब्यूटी", "मेकअप"},
+    "makeup": {"beauty", "makeup", "parlour", "skin care", "beautician", "मेकअप"},
+    "hair styling": {"hair styling", "hair dresser", "hair cutting", "hair styling and cutting", "बाल काटना"},
+    "ब्यूटी": {"beauty", "makeup", "parlour", "skin care", "beautician"},
+    "मेकअप": {"beauty", "makeup", "parlour", "skin care", "beautician"},
+
+    # Digital & Entrepreneurship
+    "data entry": {"data entry", "computer", "typing", "computer operation", "data operator", "डेटा एंट्री", "कंप्यूटर"},
+    "typing": {"data entry", "computer", "typing", "computer operation", "टाइपिंग"},
+    "computer": {"data entry", "computer", "typing", "computer operation", "कंप्यूटर"},
+    "social media": {"social media", "digital marketing", "online marketing", "content creation"},
+    "डेटा एंट्री": {"data entry", "computer", "typing", "computer operation", "data operator"},
+    "कंप्यूटर": {"data entry", "computer", "typing", "computer operation"},
+    "टाइपिंग": {"data entry", "computer", "typing", "computer operation"},
+
+    # Retail & Sales
+    "retail": {"retail", "sales", "shop", "store assistant", "customer service", "selling", "दुकान", "बिक्री"},
+    "sales": {"retail", "sales", "shop", "store assistant", "customer service", "selling", "बिक्री"},
+    "दुकान": {"retail", "sales", "shop", "store assistant", "selling"},
+}
 
 
 def _normalise(text: str) -> str:
@@ -106,19 +173,33 @@ def _tokens(text: str) -> list[str]:
     return _normalise(text).split()
 
 
+def _get_synonyms(term: str) -> set[str]:
+    """Return known synonyms and equivalences for a term."""
+    t = _normalise(term)
+    syns = {t}
+    for key, cluster in SKILL_SYNONYMS.items():
+        if key in t or t in key:
+            syns.update(cluster)
+    return syns
+
+
 def _skill_match(user_skill: str, role_skill: str) -> bool:
     """
     Return True if ``user_skill`` is considered equivalent to ``role_skill``.
 
-    Currently uses a bidirectional substring check after normalisation.
-    This catches common variations:
-      - "Stitching" matches "Sewing" → False (no substring match)
-      - "Tailoring" matches "Tailoring" → True
-      - "Sewing machine" matches "Sewing" → True (substring)
+    Checks:
+      1. Direct string equality after normalisation
+      2. Bidirectional substring containment
+      3. Overlap in curated domain synonym clusters
     """
     u = _normalise(user_skill)
     r = _normalise(role_skill)
-    return u == r or u in r or r in u
+    if u == r or u in r or r in u:
+        return True
+
+    u_syns = _get_synonyms(u)
+    r_syns = _get_synonyms(r)
+    return bool(u_syns.intersection(r_syns))
 
 
 def _compute_skill_score(
@@ -151,54 +232,65 @@ def _compute_skill_score(
 def _compute_interest_score(
     interests: list[str],
     role: LivelihoodRole,
-) -> float:
+) -> tuple[float, list[str]]:
     """
-    Compute how many user interests appear in the role's title or sector.
+    Compute how many user interests appear in the role's title, sector,
+    or description (including domain synonyms).
 
     Returns
     -------
-    float
-        Fraction of user interests matched [0.0, 1.0].
-        Returns 0.0 if user has no interests.
+    tuple[float, list[str]]
+        (Fraction of user interests matched [0.0, 1.0], list of matched interest terms)
     """
     if not interests:
-        return 0.0
+        return 0.0, []
 
-    haystack = _normalise(f"{role.title} {role.sector}")
-    matched = sum(
-        1 for interest in interests if _normalise(interest) in haystack
+    haystack = _normalise(
+        f"{role.title} {role.sector} {' '.join(role.required_skills)} {role.description}"
     )
-    return matched / len(interests)
+    matched_interests = []
+    for interest in interests:
+        i_syns = _get_synonyms(interest)
+        if any(s in haystack for s in i_syns):
+            matched_interests.append(interest)
+
+    return len(matched_interests) / len(interests), matched_interests
 
 
 def _compute_occupation_score(
     occupation: str | None,
     role: LivelihoodRole,
+    experience_years: float | None = None,
+    has_matched_skills: bool = False,
 ) -> float:
     """
-    Compute overlap between the user's occupation words and the role's title
-    or required skills.
+    Compute overlap between user occupation / experience and the role.
 
     Returns
     -------
     float
-        Fraction of occupation tokens matched [0.0, 1.0].
-        Returns 0.0 if no occupation is provided.
+        Score [0.0, 1.0].
     """
-    if not occupation:
-        return 0.0
+    occ_score = 0.0
+    if occupation:
+        occ_tokens = _tokens(occupation)
+        if occ_tokens:
+            haystack = _normalise(
+                role.title + " " + " ".join(role.required_skills)
+            )
+            matched = 0
+            for tok in occ_tokens:
+                tok_syns = _get_synonyms(tok)
+                if any(s in haystack for s in tok_syns):
+                    matched += 1
+            occ_score = matched / len(occ_tokens)
 
-    occ_tokens = _tokens(occupation)
-    if not occ_tokens:
-        return 0.0
+    # Experience alignment: if occupation doesn't match by name (e.g. Homemaker, None),
+    # but the user has practical years of experience in matching skills, credit that experience.
+    if occ_score == 0.0 and experience_years and experience_years > 0 and has_matched_skills:
+        occ_score = min(experience_years / 5.0, 1.0) * 0.5
 
-    # Build a single haystack from the role title + required skills
-    haystack = _normalise(
-        role.title + " " + " ".join(role.required_skills)
-    )
-
-    matched = sum(1 for tok in occ_tokens if tok in haystack)
-    return matched / len(occ_tokens)
+    return occ_score
 
 
 def _compute_skill_gaps(
@@ -218,13 +310,37 @@ def _compute_skill_gaps(
 
 
 def _employment_bonus(preference: str | None, role: LivelihoodRole) -> float:
-    """Return EMPLOYMENT_BONUS if the role supports the user's preference."""
+    """
+    Return EMPLOYMENT_BONUS if the role semantically supports the user's preference.
+
+    - "wage-employment" favors roles supporting wage employment (and not strictly self-employed).
+    - "self-employment" favors roles supporting self-employment / entrepreneurship.
+    - "either" / flexible receives the full bonus without mismatch penalty.
+    """
     if not preference:
         return 0.0
     pref = _normalise(preference)
+    if "either" in pref or "both" in pref or "flexible" in pref or "any" in pref or pref == "":
+        return EMPLOYMENT_BONUS
+
+    wants_wage = any(k in pref for k in ("wage", "job", "salaried", "service"))
+    wants_self = any(k in pref for k in ("self", "business", "own"))
+
+    role_types = [_normalise(e) for e in role.employment_type]
+    role_supports_wage = any("wage" in e for e in role_types) and "self-employed" not in role.title.lower()
+    role_supports_self = any("self" in e for e in role_types)
+
+    if wants_wage and role_supports_wage:
+        return EMPLOYMENT_BONUS
+    if wants_self and role_supports_self:
+        return EMPLOYMENT_BONUS
+
+    # Fallback to direct substring match for any non-standard preference string
     for emp in role.employment_type:
-        if pref in _normalise(emp) or _normalise(emp) in pref:
+        emp_n = _normalise(emp)
+        if pref in emp_n or emp_n in pref:
             return EMPLOYMENT_BONUS
+
     return 0.0
 
 
@@ -243,15 +359,12 @@ def match_profile(
     profile : UserProfile
         The structured livelihood profile from the conversation engine.
     roles : list[LivelihoodRole] | None
-        Roles to match against.  Defaults to the full knowledge base.
-        Pass a custom list in tests.
+        Roles to match against. Defaults to the full knowledge base.
 
     Returns
     -------
     list[MatchResult]
         All roles scored and sorted by ``score`` descending.
-        Roles with score 0.0 are included so the caller can decide
-        on a minimum threshold.
     """
     if roles is None:
         roles = get_all_roles()
@@ -262,9 +375,14 @@ def match_profile(
         skill_score, matched_skills = _compute_skill_score(
             profile.skills, role.required_skills
         )
-        interest_score = _compute_interest_score(profile.interests, role)
+        interest_score, matched_interests = _compute_interest_score(
+            profile.interests, role
+        )
         occupation_score = _compute_occupation_score(
-            profile.current_occupation, role
+            profile.current_occupation,
+            role,
+            experience_years=profile.experience_years,
+            has_matched_skills=len(matched_skills) > 0,
         )
         bonus = _employment_bonus(profile.employment_preference, role)
 
@@ -286,6 +404,7 @@ def match_profile(
                 nsqf_level=role.nsqf_level,
                 score=final_score,
                 matched_skills=matched_skills,
+                matched_interests=matched_interests,
                 skill_gaps=skill_gaps,
                 employment_type=role.employment_type,
             )
@@ -294,3 +413,4 @@ def match_profile(
     # Sort by score descending; use role_id as a stable tiebreaker
     results.sort(key=lambda r: (-r.score, r.role_id))
     return results
+

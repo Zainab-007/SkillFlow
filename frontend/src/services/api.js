@@ -97,3 +97,45 @@ export async function checkBackendHealth() {
     return { status: 'offline', service: 'SkillFlow backend' };
   }
 }
+
+/**
+ * Fetch top 3 NSQF recommendations and training pathways for a completed profile.
+ *
+ * @param {Object} profile - Completed livelihood profile
+ * @returns {Promise<{
+ *   total_evaluated: number,
+ *   total_recommended: number,
+ *   recommendations: Array<Object>
+ * }>}
+ */
+export async function fetchRecommendations(profile) {
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/recommendations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ profile }),
+    });
+  } catch (netErr) {
+    throw new Error(
+      'Could not connect to the recommendations service. Please verify that the backend is running.'
+    );
+  }
+
+  if (!response.ok) {
+    let errorDetail = 'Failed to fetch recommendations.';
+    try {
+      const errJson = await response.json();
+      if (errJson.detail) errorDetail = errJson.detail;
+    } catch {
+      // fallback
+    }
+    throw new Error(`Recommendations error (${response.status}): ${errorDetail}`);
+  }
+
+  return response.json();
+}
+
