@@ -83,7 +83,7 @@ def _get_or_create_session(session_id: str) -> dict:
     return _sessions[session_id]
 
 
-def _merge_profile(existing: dict, update: dict) -> dict:
+def _merge_profile(existing: dict, update: Any) -> dict:
     """
     Merge a profile update into the existing session profile.
 
@@ -93,6 +93,13 @@ def _merge_profile(existing: dict, update: dict) -> dict:
     - Numeric fields (experience_years): overwrite if positive.
     - Unknown keys from the LLM are silently dropped.
     """
+    if hasattr(update, "model_dump"):
+        update_data = update.model_dump(exclude_none=True)
+    elif isinstance(update, dict):
+        update_data = update
+    else:
+        update_data = {}
+
     valid_string_fields = {
         "education",
         "current_occupation",
@@ -105,7 +112,7 @@ def _merge_profile(existing: dict, update: dict) -> dict:
 
     merged = dict(existing)
 
-    for key, value in update.items():
+    for key, value in update_data.items():
         if key in valid_string_fields:
             if isinstance(value, str) and value.strip():
                 merged[key] = value.strip()
@@ -155,41 +162,138 @@ def _profile_completeness(profile: dict) -> tuple[list[str], list[str]]:
     return completed, remaining
 
 
-def _build_system_prompt(language: str) -> str:
+def is_profile_sufficient_for_completion(
+    profile: dict,
+    turn_number: int = 1,
+) -> bool:
+    """
+    Deterministically validate whether the profile contains sufficient information
+    to support meaningful livelihood and skilling recommendations.
+
+    Required fields:
+      - education: non-empty string (e.g. '8th pass', '10th pass', 'No formal schooling')
+      - current_occupation: non-empty string OR skills non-empty
+      - experience_years: numeric (>= 0, 0.0 is valid for beginners/no prior experience)
+      - skills: non-empty list
+      - interests: non-empty list (e.g. domains/trades or ['Open to any'])
+      - mobility_constraint: non-empty string (e.g. 'Home-based preferred', 'None')
+      - employment_preference: non-empty string ('Self-employment', 'Wage-employment', 'Either')
+      - location: non-empty string (city, district, town, or state)
+
+    Safety fallback:
+      If turn_number >= 10 (user has engaged extensively), allow completion if at least
+      core livelihood fields are satisfied (education, occupation/skills, employment_preference, location).
+    """
+    edu = profile.get("education")
+    has_edu = isinstance(edu, str) and bool(edu.strip())
+
+    occ = profile.get("current_occupation")
+    skills = profile.get("skills") or []
+    has_skills = isinstance(skills, list) and len(skills) > 0
+    has_occ = (isinstance(occ, str) and bool(occ.strip())) or has_skills
+
+    exp = profile.get("experience_years")
+    has_exp = exp is not None and isinstance(exp, (int, float))
+
+    interests = profile.get("interests") or []
+    has_interests = isinstance(interests, list) and len(interests) > 0
+
+    mob = profile.get("mobility_constraint")
+    has_mob = isinstance(mob, str) and bool(mob.strip())
+
+    pref = profile.get("employment_preference")
+    has_pref = isinstance(pref, str) and bool(pref.strip())
+
+    loc = profile.get("location")
+    has_loc = isinstance(loc, str) and bool(loc.strip())
+
+    # Full completeness check
+    if (
+        has_edu
+        and has_occ
+        and has_skills
+        and has_exp
+        and has_interests
+        and has_mob
+        and has_pref
+        and has_loc
+    ):
+        return True
+
+    # Extended turn safety cap (prevents trapping users who decline/skip optional details)
+    if turn_number >= 10 and has_edu and has_occ and has_pref and has_loc:
+        return True
+
+    return False
+
+
+def _build_system_prompt(
+    language: str,
+    current_profile: dict | None = None,
+    fields_remaining: list[str] | None = None,
+) -> str:
     """
     Build the system prompt that instructs Gemini how to behave.
 
-    The prompt is the same regardless of language — the language instruction
-    is embedded inside it.  Internal reasoning remains in English.
+    The prompt incorporates the currently collected profile and remaining fields
+    so Gemini asks targeted questions and never declares completion prematurely.
     """
     lang_name = "English" if language == "en" else "Hindi"
 
+    profile_summary = ""
+    if current_profile:
+        lines = []
+        for k in _ALL_PROFILE_FIELDS:
+            v = current_profile.get(k)
+            lines.append(f"  - {k}: {v if v is not None and v != '' and v != [] else 'Not yet gathered'}")
+        profile_summary = "\nCURRENT PROFILE STATUS:\n" + "\n".join(lines)
+
+    remaining_summary = ""
+    if fields_remaining:
+        remaining_summary = (
+            f"\nFIELDS STILL MISSING: {', '.join(fields_remaining)}\n"
+            "INSTRUCTION FOR NEXT TURN: Ask ONE natural, encouraging question specifically targeting one of these missing fields."
+        )
+    elif fields_remaining is not None and len(fields_remaining) == 0:
+        remaining_summary = (
+            "\nALL REQUIRED FIELDS HAVE BEEN GATHERED!\n"
+            "Your assistant_question must be a warm closing statement thanking the user and informing "
+            "them that their profile is ready for livelihood recommendations. DO NOT ask any further questions. "
+            "Set interview_complete=true."
+        )
+
     return f"""You are a warm, patient livelihood counsellor helping individuals in India \
-explore skill-development and training opportunities.
+explore skill-development and training opportunities under PM-AJAY.
 
 Your goal is to build a structured livelihood profile through natural conversation.
-You collect information across these fields:
-- education (e.g. "5th pass", "8th pass", "10th pass", "12th pass", "Graduate")
-- current_occupation (e.g. "Tailoring", "Farming", "None")
-- experience_years (numeric, years of relevant work experience)
-- skills (list of skills the person already has)
-- interests (list of domains or activities they enjoy or want to work in)
+You collect information across these 8 core fields:
+- education (e.g. "5th pass", "8th pass", "10th pass", "12th pass", "Graduate", or "No formal schooling")
+- current_occupation (e.g. "Tailoring", "Farming", "Homemaker", "None")
+- experience_years (numeric, years of work experience; use 0.0 if beginner or no prior formal work)
+- skills (list of practical skills the person already has)
+- interests (list of trades, skills, or domains they want to learn or work in)
 - mobility_constraint (e.g. "Home-based preferred", "Can travel locally", "None")
 - employment_preference ("Self-employment", "Wage-employment", or "Either")
-- location (city, district, or state)
+- location (city, district, town, or state)
+{profile_summary}{remaining_summary}
 
 RULES:
 1. Ask ONLY ONE short, voice-friendly question per turn.
-2. NEVER ask for information already mentioned by the user.
-3. Extract information silently — do NOT narrate what you extracted.
-4. Do NOT fabricate information. Only record what the user clearly states.
+2. NEVER ask for information already known in the profile status above.
+3. Extract information silently into profile_update — do NOT narrate what you extracted.
+4. Do NOT fabricate information. Only record what the user clearly states or implies.
 5. If the user's answer is ambiguous, ask a natural clarification.
-6. Aim for 5–8 total turns. Stop when the profile is sufficiently complete.
-7. Set interview_complete=true when you have enough information for useful recommendations.
-   You do NOT need every single field — use good judgment.
-8. Ask questions in {lang_name}. Keep internal profile field names in English.
-9. Your tone should be conversational and encouraging, NOT like a form.
-10. Questions should build naturally on what the user just said.
+6. Target missing fields: keep each turn focused on asking for one missing field.
+7. Handle declines gracefully: If the user says they don't know, have no preference, or want to skip \
+(e.g., "no experience", "no preference", "open to anything"), record that (e.g., experience_years: 0.0, \
+interests: ["Open to any"], mobility_constraint: "None") and move on to the next missing field without repeating.
+8. INTERVIEW COMPLETION RULES:
+   - NEVER set interview_complete=true while still asking a question.
+   - Set interview_complete=false on every intermediate turn while asking questions.
+   - Set interview_complete=true ONLY when all required fields have been addressed AND your assistant_question \
+is a final closing statement thanking the user.
+9. Ask questions in {lang_name}. Keep internal profile field names in English.
+10. Your tone should be encouraging, respectful, and conversational, NOT like an interrogation or form.
 
 OUTPUT FORMAT:
 You must respond ONLY with valid JSON matching this exact schema:
@@ -202,6 +306,7 @@ You must respond ONLY with valid JSON matching this exact schema:
 Do not add any text outside the JSON.
 Do not add markdown code fences.
 """
+
 
 
 def _build_contents(
@@ -233,6 +338,14 @@ def _get_gemini_client():
     """
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
+        # Explicitly search for backend/.env relative to this file
+        from pathlib import Path
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        load_dotenv(backend_dir / ".env")
+        load_dotenv()
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+
+    if not api_key:
         raise EnvironmentError(
             "GEMINI_API_KEY environment variable is not set. "
             "Create backend/.env with GEMINI_API_KEY=your_key_here."
@@ -263,20 +376,54 @@ def _call_gemini(
     """
     from google.genai import types  # type: ignore[import]
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                response_mime_type="application/json",
-                response_schema=LLMTurnOutput,
-                temperature=0.4,        # low temperature for consistent extraction
-                max_output_tokens=512,
-            ),
-        )
-    except Exception as exc:
-        raise RuntimeError(f"Gemini API call failed: {exc}") from exc
+    # Models to attempt in order of preference.
+    # Flash-lite models have distinct, higher free-tier request quotas on Google AI Studio.
+    candidate_models = [
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+    ]
+    response = None
+    last_exc = None
+
+    for model_name in candidate_models:
+        try:
+            config_params = {
+                "system_instruction": system_prompt,
+                "response_mime_type": "application/json",
+                "response_schema": LLMTurnOutput,
+                "temperature": 0.4,        # low temperature for consistent extraction
+                "max_output_tokens": 1024,
+            }
+            # thinking_budget is only supported on standard flash/pro models, not flash-lite
+            if "lite" not in model_name:
+                config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(**config_params),
+            )
+            logger.info("Gemini generation succeeded with model: %s", model_name)
+            break
+        except Exception as exc:
+            last_exc = exc
+            status_code = getattr(exc, "code", getattr(exc, "status_code", None))
+            logger.warning(
+                "Gemini attempt failed | Model: %s | Status: %s | Type: %s | Error: %s",
+                model_name,
+                status_code,
+                type(exc).__name__,
+                exc,
+            )
+
+    if response is None:
+        status_code = getattr(last_exc, "code", getattr(last_exc, "status_code", None))
+        raise RuntimeError(
+            f"Gemini API call failed (status={status_code}, type={type(last_exc).__name__}): {last_exc}"
+        ) from last_exc
 
     raw_text = response.text
     if not raw_text:
@@ -307,23 +454,6 @@ def process_conversation_turn(request: ConversationRequest) -> ConversationRespo
     5. Merge extracted profile_update into session profile.
     6. Update session history.
     7. Return ConversationResponse.
-
-    Parameters
-    ----------
-    request : ConversationRequest
-
-    Returns
-    -------
-    ConversationResponse
-
-    Raises
-    ------
-    ValueError
-        Invalid language or empty message (→ HTTP 400).
-    EnvironmentError
-        Missing API key (→ HTTP 503).
-    RuntimeError
-        Gemini API failure (→ HTTP 502).
     """
     # --- Input validation ---
     if request.language not in SUPPORTED_LANGUAGES:
@@ -349,24 +479,47 @@ def process_conversation_turn(request: ConversationRequest) -> ConversationRespo
                 for t in request.conversation_history
             ]
 
-    # --- Build Gemini inputs ---
-    system_prompt = _build_system_prompt(request.language)
+    turn_number = (len(session["history"]) // 2) + 1
+    logger.info(
+        "Conversation Turn | Session: %s | Turn: %d | Language: %s | User Input: %s",
+        request.session_id,
+        turn_number,
+        request.language,
+        message[:100],
+    )
+
+    # --- Determine current profile completeness before LLM call ---
+    _, fields_remaining_prior = _profile_completeness(session["profile"])
+
+    # --- Build Gemini inputs with live profile context ---
+    system_prompt = _build_system_prompt(
+        language=request.language,
+        current_profile=session["profile"],
+        fields_remaining=fields_remaining_prior,
+    )
     contents = _build_contents(session["history"], message)
 
     # --- Call Gemini ---
     client = _get_gemini_client()
     turn_output = _call_gemini(client, system_prompt, contents)
 
+    profile_update_dict = (
+        turn_output.profile_update.model_dump(exclude_none=True)
+        if hasattr(turn_output.profile_update, "model_dump")
+        else turn_output.profile_update
+    )
+
     logger.info(
-        "Session %s | interview_complete=%s | profile_update=%s",
+        "Conversation Response | Session: %s | Turn: %d | LLM complete=%s | Extracted: %s",
         request.session_id,
+        turn_number,
         turn_output.interview_complete,
-        turn_output.profile_update,
+        profile_update_dict,
     )
 
     # --- Merge profile ---
     session["profile"] = _merge_profile(
-        session["profile"], turn_output.profile_update
+        session["profile"], profile_update_dict
     )
 
     # --- Update history ---
@@ -375,18 +528,38 @@ def process_conversation_turn(request: ConversationRequest) -> ConversationRespo
         {"role": "assistant", "content": turn_output.assistant_question}
     )
 
-    # --- Compute completeness ---
+    # --- Compute completeness after profile update ---
     fields_completed, fields_remaining = _profile_completeness(session["profile"])
+
+    # --- Deterministic completion check ---
+    # The interview is complete ONLY if the profile data is actually sufficient to recommend pathways.
+    # LLM cannot mark complete early while required fields are missing.
+    is_sufficient = is_profile_sufficient_for_completion(session["profile"], turn_number)
+    final_interview_complete = is_sufficient and (
+        turn_output.interview_complete or len(fields_remaining) == 0
+    )
+
+    logger.info(
+        "Conversation Completion Decision | Session: %s | Turn: %d | "
+        "LLM_suggested=%s | is_sufficient=%s | final_complete=%s | Remaining: %s",
+        request.session_id,
+        turn_number,
+        turn_output.interview_complete,
+        is_sufficient,
+        final_interview_complete,
+        fields_remaining,
+    )
 
     return ConversationResponse(
         session_id=request.session_id,
         assistant_question=turn_output.assistant_question,
-        profile_update=turn_output.profile_update,
+        profile_update=profile_update_dict,
         profile=dict(session["profile"]),
         fields_completed=fields_completed,
         fields_remaining=fields_remaining,
-        interview_complete=turn_output.interview_complete,
+        interview_complete=final_interview_complete,
     )
+
 
 
 # ---------------------------------------------------------------------------

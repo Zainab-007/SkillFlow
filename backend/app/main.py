@@ -19,6 +19,15 @@ from app.routes.knowledge import router
 from app.routes.conversation import router as conversation_router
 from app.services.knowledge_base import get_knowledge_base
 
+import sys
+
+# Ensure UTF-8 output on Windows consoles to prevent UnicodeEncodeError with Devanagari / regional scripts
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------

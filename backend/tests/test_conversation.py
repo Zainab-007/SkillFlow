@@ -337,9 +337,19 @@ def test_empty_llm_response_returns_400():
 # 11. Interview completion
 # ---------------------------------------------------------------------------
 def test_interview_complete_flag():
+    full_profile = {
+        "education": "10th pass",
+        "current_occupation": "Tailoring",
+        "experience_years": 3.0,
+        "skills": ["Sewing", "Cutting"],
+        "interests": ["Boutique management"],
+        "mobility_constraint": "Home-based preferred",
+        "employment_preference": "Self-employment",
+        "location": "Jaipur",
+    }
     with _patch_gemini(
         "Thank you! Based on your profile, here are some training suggestions.",
-        profile_update={"employment_preference": "Self-employment"},
+        profile_update=full_profile,
         interview_complete=True,
     ):
         body = client.post("/api/conversation", json={
@@ -356,10 +366,14 @@ def test_interview_complete_with_rich_profile():
     # First build up a rich profile
     session_id = "rich-session"
     turns = [
-        ({"current_occupation": "Tailoring", "experience_years": 5}, False, "What skills?"),
+        ({"current_occupation": "Tailoring", "experience_years": 5.0}, False, "What skills?"),
         ({"skills": ["Sewing", "Embroidery"]}, False, "What level?"),
-        ({"education": "10th"}, False, "Where are you?"),
-        ({"location": "Pune", "employment_preference": "Self-employment"}, True, "Great, all set!"),
+        ({"education": "10th", "interests": ["Garments"]}, False, "Where are you?"),
+        ({
+            "location": "Pune",
+            "employment_preference": "Self-employment",
+            "mobility_constraint": "Home-based preferred",
+        }, True, "Great, all set!"),
     ]
     for p_update, complete, q in turns:
         with _patch_gemini(q, profile_update=p_update, interview_complete=complete):
@@ -372,6 +386,81 @@ def test_interview_complete_with_rich_profile():
     assert body["interview_complete"] is True
     assert "current_occupation" in body["fields_completed"]
     assert "skills" in body["fields_completed"]
+    assert "experience_years" in body["fields_completed"]
+    assert "interests" in body["fields_completed"]
+
+
+# ---------------------------------------------------------------------------
+# 11b. Regression: Incomplete profile must NOT complete interview early
+# ---------------------------------------------------------------------------
+def test_incomplete_profile_missing_experience_and_interests_does_not_complete():
+    """
+    Regression test for SIH user test bug:
+    A profile with occupation, skills, education, location, employment preference,
+    and work setting, but WITHOUT experience and interests, must NOT be marked complete,
+    even if the LLM erroneously returns interview_complete=True while asking a question.
+    """
+    session_id = "test-incomplete-user-bug-session"
+    partial_profile = {
+        "current_occupation": "Tailoring",
+        "education": "8th pass",
+        "location": "Malad, Mumbai",
+        "employment_preference": "Self-employment",
+        "mobility_constraint": "Home-based preferred",
+        "skills": ["Silayi", "Tailoring"],
+        # Notice: experience_years and interests are intentionally missing
+    }
+
+    with _patch_gemini(
+        assistant_question="बहुत बढ़िया! आपके पास सिलाई का कितने साल का अनुभव है?",
+        profile_update=partial_profile,
+        interview_complete=True,  # LLM erroneously suggests completion while asking a question
+    ):
+        body = client.post("/api/conversation", json={
+            "session_id": session_id,
+            "language": "hi",
+            "message": "apna khud ka",
+        }).json()
+
+    # Must stay active so user can answer the follow-up question
+    assert body["interview_complete"] is False
+    assert "experience_years" in body["fields_remaining"]
+    assert "interests" in body["fields_remaining"]
+    assert body["assistant_question"] == "बहुत बढ़िया! आपके पास सिलाई का कितने साल का अनुभव है?"
+
+
+def test_complete_profile_with_all_required_fields_does_complete():
+    """
+    Test that when all 8 required profile fields are present and LLM signals completion,
+    the backend confirms completion (interview_complete=True).
+    """
+    session_id = "test-fully-complete-session"
+    full_profile = {
+        "current_occupation": "Tailoring",
+        "education": "8th pass",
+        "location": "Malad, Mumbai",
+        "employment_preference": "Self-employment",
+        "mobility_constraint": "Home-based preferred",
+        "skills": ["Silayi", "Tailoring"],
+        "experience_years": 4.0,
+        "interests": ["Boutique business", "Garment design"],
+    }
+
+    with _patch_gemini(
+        assistant_question="बहुत धन्यवाद! आपकी प्रोफाइल पूरी हो गई है। अब हम आपके लिए अवसर ढूंढ रहे हैं।",
+        profile_update=full_profile,
+        interview_complete=True,
+    ):
+        body = client.post("/api/conversation", json={
+            "session_id": session_id,
+            "language": "hi",
+            "message": "मुझे 4 साल का तजुर्बा है और मैं बुटीक का काम सीखना चाहती हूँ।",
+        }).json()
+
+    assert body["interview_complete"] is True
+    assert len(body["fields_remaining"]) == 0
+    assert len(body["fields_completed"]) == 8
+
 
 
 # ---------------------------------------------------------------------------
@@ -480,3 +569,61 @@ def test_match_still_passes():
     })
     assert response.status_code == 200
     assert len(response.json()["results"]) == 20
+
+
+# ---------------------------------------------------------------------------
+# 16. Regression: Short context-dependent reply in multi-turn ("apna khud ka")
+# ---------------------------------------------------------------------------
+def test_short_context_dependent_reply_multi_turn():
+    """
+    Regression test: Verifies that short context-dependent replies (e.g. 'apna khud ka')
+    in multi-turn sessions correctly update the profile and return 200 without upstream schema errors.
+    """
+    session_id = "regression-short-context-session"
+
+    # Turn 1: Initial greeting and location
+    with _patch_gemini(
+        assistant_question="नमस्ते! आप क्या काम करते हैं?",
+        profile_update={"location": "Jaipur"},
+    ):
+        r1 = client.post("/api/conversation", json={
+            "session_id": session_id,
+            "language": "hi",
+            "message": "नमस्ते, मैं जयपुर से हूँ।",
+        })
+        assert r1.status_code == 200
+        assert r1.json()["profile"]["location"] == "Jaipur"
+        assert "location" in r1.json()["fields_completed"]
+
+    # Turn 2: Mention occupation
+    with _patch_gemini(
+        assistant_question="क्या आप खुद का काम शुरू करना चाहते हैं या नौकरी करना चाहते हैं?",
+        profile_update={"current_occupation": "Tailoring", "skills": ["Sewing"]},
+    ):
+        r2 = client.post("/api/conversation", json={
+            "session_id": session_id,
+            "language": "hi",
+            "message": "मैं घर पर सिलाई का काम करती हूँ।",
+        })
+        assert r2.status_code == 200
+        assert r2.json()["profile"]["current_occupation"] == "Tailoring"
+        assert "current_occupation" in r2.json()["fields_completed"]
+
+    # Turn 3: Short context-dependent reply: "apna khud ka"
+    with _patch_gemini(
+        assistant_question="बहुत बढ़िया! आपके पास सिलाई का कितने साल का अनुभव है?",
+        profile_update={"employment_preference": "Self-employment"},
+    ):
+        r3 = client.post("/api/conversation", json={
+            "session_id": session_id,
+            "language": "hi",
+            "message": "apna khud ka",
+        })
+        assert r3.status_code == 200
+        body = r3.json()
+        assert body["profile"]["employment_preference"] == "Self-employment"
+        assert body["profile"]["current_occupation"] == "Tailoring"
+        assert body["profile"]["location"] == "Jaipur"
+        assert "employment_preference" in body["fields_completed"]
+
+

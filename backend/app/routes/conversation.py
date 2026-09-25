@@ -55,29 +55,45 @@ def conversation(request: ConversationRequest) -> ConversationResponse:
         return process_conversation_turn(request)
 
     except ValueError as exc:
-        # Validation errors: empty message, bad language, bad LLM JSON
-        logger.warning("Conversation 400: %s", exc)
+        logger.warning(
+            "Conversation 400 | Session: %s | Lang: %s | Error: %s",
+            request.session_id,
+            request.language,
+            exc,
+        )
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     except EnvironmentError as exc:
-        # Missing API key
-        logger.error("Conversation 503: %s", exc)
+        logger.error(
+            "Conversation 503 | Session: %s | Missing Configuration: %s",
+            request.session_id,
+            exc,
+        )
         raise HTTPException(
             status_code=503,
             detail="The conversation service is not available: Gemini API key is not configured.",
         ) from exc
 
     except RuntimeError as exc:
-        # Gemini API failure
-        logger.error("Conversation 502: %s", exc)
+        logger.error(
+            "Conversation 502 | Session: %s | Lang: %s | Upstream Error: %s",
+            request.session_id,
+            request.language,
+            exc,
+        )
         raise HTTPException(
             status_code=502,
             detail="The conversation service encountered an error. Please try again.",
         ) from exc
 
     except Exception as exc:
-        # Catch-all — do not expose internal details
-        logger.exception("Unexpected error in conversation endpoint: %s", exc)
+        logger.exception(
+            "Conversation 500 | Session: %s | Lang: %s | Unexpected (%s): %s",
+            request.session_id,
+            request.language,
+            type(exc).__name__,
+            exc,
+        )
         raise HTTPException(
             status_code=500,
             detail="An unexpected error occurred.",

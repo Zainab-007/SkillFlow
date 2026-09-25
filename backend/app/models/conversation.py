@@ -67,6 +67,25 @@ class ConversationRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Profile update extracted by LLM
+# ---------------------------------------------------------------------------
+class ProfileUpdate(BaseModel):
+    """
+    Partial profile fields extracted from the user's message.
+    Explicit typed fields avoid additionalProperties: true in Gemini response_schema.
+    """
+    education: Optional[str] = None
+    current_occupation: Optional[str] = None
+    experience_years: Optional[float] = None
+    skills: Optional[list[str]] = None
+    interests: Optional[list[str]] = None
+    mobility_constraint: Optional[str] = None
+    employment_preference: Optional[str] = None
+    location: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
 # LLM structured output — what Gemini must return
 # ---------------------------------------------------------------------------
 class LLMTurnOutput(BaseModel):
@@ -75,24 +94,10 @@ class LLMTurnOutput(BaseModel):
 
     Gemini is instructed to return JSON matching this schema exactly.
     Validated with Pydantic before any further processing.
-
-    Fields
-    ------
-    assistant_question : str
-        The next question to ask the user (in the requested language).
-        If interview_complete is True, this should be a closing statement.
-    profile_update : dict[str, Any]
-        A partial dict of profile fields extracted from the user's message.
-        Only include fields that are newly known or updated.
-        Use English field names matching UserProfile.
-        Example: {"current_occupation": "Tailoring", "experience_years": 3}
-    interview_complete : bool
-        True when enough profile fields have been collected for useful
-        livelihood recommendations.
     """
 
     assistant_question: str
-    profile_update: dict[str, Any] = Field(default_factory=dict)
+    profile_update: ProfileUpdate = Field(default_factory=ProfileUpdate)
     interview_complete: bool = False
 
 
