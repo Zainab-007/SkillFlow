@@ -1,0 +1,649 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-09-25",
+  "description": "Curated, government-aligned knowledge base of NSQF vocational roles and pathways. This dataset is based on publicly available Qualification Pack (QP) documents published by Sector Skill Councils (SSCs) and listed on the National Qualification Register (NQR). It does NOT claim to be a live government database and should not be treated as one. All NSQF levels, QP codes, and eligibility details are drawn from official sources as referenced in each entry.",
+  "roles": [
+    {
+      "id": "T-001",
+      "title": "Sewing Machine Operator",
+      "qp_code": "AMH/Q0301",
+      "nsqf_level": 2.5,
+      "sector": "Apparel & Textiles",
+      "required_skills": [
+        "Sewing",
+        "Machine Operation",
+        "Fabric Handling",
+        "Stitching",
+        "Seam Quality Control"
+      ],
+      "gap_skills_covered": [
+        "Industrial Sewing Machine Operation",
+        "Fabric Identification",
+        "Stitch Quality Inspection",
+        "Basic Garment Construction",
+        "Workplace Health and Safety"
+      ],
+      "eligibility": "8th grade pass preferred; no prior formal training required",
+      "qualification": "Certificate in Sewing Machine Operator — Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+      "duration": "Not specified in source (PMKVY short-term training format)",
+      "description": "Operates industrial sewing machines to stitch fabric, fur, or synthetic materials to produce apparel or made-up items. Suitable for home tailors or those with basic sewing experience seeking industrial employment or self-employment.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+        "document": "Qualification Pack: Sewing Machine Operator (AMH/Q0301)",
+        "url": "https://sscamh.com"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "T-002",
+      "title": "Self-Employed Tailor",
+      "qp_code": "AMH/Q1947",
+      "nsqf_level": 4,
+      "sector": "Apparel & Textiles",
+      "required_skills": [
+        "Tailoring",
+        "Garment Making",
+        "Sewing",
+        "Alteration",
+        "Measurement Taking",
+        "Pattern Making"
+      ],
+      "gap_skills_covered": [
+        "Advanced Garment Construction",
+        "Customer Interaction",
+        "Basic Business Management",
+        "Fabric Selection",
+        "Finishing and Pressing"
+      ],
+      "eligibility": "8th grade pass with 6 months of relevant experience in tailoring or sewing",
+      "qualification": "Certificate in Self-Employed Tailor — Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+      "duration": "Not specified in source (PMKVY short-term training format)",
+      "description": "Designed for home-based or self-employed tailors who stitch, alter, and repair garments for customers. Covers end-to-end garment construction including measurement, cutting, stitching, and finishing. Ideal for individuals with tailoring experience seeking formal certification and skill upgradation.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+        "document": "Qualification Pack: Self-Employed Tailor (AMH/Q1947)",
+        "url": "https://sscamh.com"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "T-003",
+      "title": "Inline Checker — Sewing",
+      "qp_code": "AMH/Q0103",
+      "nsqf_level": 4,
+      "sector": "Apparel & Textiles",
+      "required_skills": [
+        "Sewing",
+        "Garment Quality Inspection",
+        "Stitch Quality Assessment",
+        "Fabric Defect Identification",
+        "Measurement Verification"
+      ],
+      "gap_skills_covered": [
+        "Inline Quality Control",
+        "Defect Documentation",
+        "Communication",
+        "Workplace Safety",
+        "Garment Standards Knowledge"
+      ],
+      "eligibility": "10th grade pass with 1.5 years of relevant experience; or 8th grade pass with 4.5 years of relevant experience; or NSQF Level 2.5 qualification with 3 years of relevant experience",
+      "qualification": "Certificate in Inline Checker — Sewing — Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+      "duration": "Approximately 420 notional hours",
+      "description": "Responsible for conducting quality checks on garment production lines at various stages of the sewing process. Identifies defects, ensures adherence to quality standards, and coordinates with production team. Suitable for experienced sewers seeking to move into quality assurance roles.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "Apparel, Made-Ups & Home Furnishing Sector Skill Council (AMHSSC)",
+        "document": "Qualification Pack: Inline Checker — Sewing (AMH/Q0103)",
+        "url": "https://sscamh.com"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "T-004",
+      "title": "Two Shaft Handloom Weaver",
+      "qp_code": "TSC/Q7303",
+      "nsqf_level": 3,
+      "sector": "Apparel & Textiles",
+      "required_skills": [
+        "Handloom Weaving",
+        "Yarn Handling",
+        "Loom Setup",
+        "Weaving Patterns",
+        "Textile Knowledge"
+      ],
+      "gap_skills_covered": [
+        "Warp and Weft Preparation",
+        "Loom Maintenance",
+        "Fabric Defect Identification",
+        "Design Weaving",
+        "Basic Entrepreneurship"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Two Shaft Handloom Weaver — Textile Sector Skill Council (TSC)",
+      "duration": "Not specified in source",
+      "description": "Covers operation of a two-shaft handloom to produce traditional or commercial textiles. Relevant for weavers in handloom clusters seeking to formalise skills. Supports self-employment and artisan livelihoods.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Textile Sector Skill Council (TSC)",
+        "document": "Qualification Pack: Two Shaft Handloom Weaver (TSC/Q7303)",
+        "url": "https://texskill.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "A-001",
+      "title": "Paddy Cultivator",
+      "qp_code": "AGR/Q0101",
+      "nsqf_level": 3,
+      "sector": "Agriculture & Allied Activities",
+      "required_skills": [
+        "Crop Cultivation",
+        "Land Preparation",
+        "Seed Selection",
+        "Irrigation",
+        "Crop Protection"
+      ],
+      "gap_skills_covered": [
+        "Paddy Nursery Management",
+        "Transplanting Techniques",
+        "Integrated Pest Management",
+        "Post-Harvest Handling",
+        "Soil Health Management"
+      ],
+      "eligibility": "10th grade pass (no experience required); 8th grade pass with 3 years in agriculture; 5th grade pass with 6 years in agriculture; or NSQF Level 2.5 with 1.5 years in agriculture",
+      "qualification": "Certificate in Paddy Cultivator — Agriculture Skill Council of India (ASCI)",
+      "duration": "270 notional hours (90 hours theory + 150 hours practical + 30 hours employability skills)",
+      "description": "Trains individuals in systematic paddy/rice cultivation covering land preparation, seed selection, nursery management, transplanting, irrigation, pest control, and post-harvest handling. Relevant for agricultural laborers, tenant farmers, and rural youth seeking to improve crop productivity and income.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Agriculture Skill Council of India (ASCI)",
+        "document": "Qualification Pack: Paddy Cultivator (AGR/Q0101)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "A-002",
+      "title": "Organic Grower",
+      "qp_code": "AGR/Q1201",
+      "nsqf_level": 4,
+      "sector": "Agriculture & Allied Activities",
+      "required_skills": [
+        "Crop Cultivation",
+        "Organic Farming Practices",
+        "Composting",
+        "Natural Pest Management",
+        "Soil Management"
+      ],
+      "gap_skills_covered": [
+        "Organic Certification Process",
+        "Bio-input Preparation",
+        "Organic Market Linkages",
+        "Record Keeping",
+        "Water Conservation"
+      ],
+      "eligibility": "5th grade pass or above; PMKVY RPL candidates require prior farming experience",
+      "qualification": "Certificate in Organic Grower — Agriculture Skill Council of India (ASCI)",
+      "duration": "Approximately 390 notional hours",
+      "description": "Equips farmers and agricultural workers with techniques for organic crop production including soil preparation, composting, bio-input preparation, natural pest management, and record keeping for organic certification. Supports farmers seeking premium markets and sustainable livelihoods.",
+      "employment_type": ["self-employment"],
+      "source": {
+        "organization": "Agriculture Skill Council of India (ASCI)",
+        "document": "Qualification Pack: Organic Grower (AGR/Q1201)",
+        "url": "https://asci-india.com"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "A-003",
+      "title": "Pulses Cultivator",
+      "qp_code": "AGR/Q0104",
+      "nsqf_level": 3,
+      "sector": "Agriculture & Allied Activities",
+      "required_skills": [
+        "Crop Cultivation",
+        "Seed Selection",
+        "Land Preparation",
+        "Irrigation",
+        "Crop Protection"
+      ],
+      "gap_skills_covered": [
+        "Pulse Crop Agronomy",
+        "Integrated Pest Management",
+        "Nitrogen Fixation Practices",
+        "Post-Harvest Processing",
+        "Market Linkage"
+      ],
+      "eligibility": "Not specified in source; consistent with ASCI NSQF Level 3 entry norms",
+      "qualification": "Certificate in Pulses Cultivator — Agriculture Skill Council of India (ASCI)",
+      "duration": "Not specified in source",
+      "description": "Focuses on systematic cultivation of pulses (lentils, chickpeas, moong, urad, etc.) including agronomy, soil preparation, pest management, and post-harvest handling. Relevant for dry-land farmers and agricultural laborers in pulse-growing regions.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Agriculture Skill Council of India (ASCI)",
+        "document": "Qualification Pack: Pulses Cultivator (AGR/Q0104)",
+        "url": "https://asci-india.com"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "C-001",
+      "title": "Assistant Carpenter",
+      "qp_code": "FFS/Q2201",
+      "nsqf_level": 3,
+      "sector": "Carpentry, Construction & Skilled Trades",
+      "required_skills": [
+        "Woodworking",
+        "Hand Tools Operation",
+        "Measurement",
+        "Material Handling",
+        "Basic Joinery"
+      ],
+      "gap_skills_covered": [
+        "Site Preparation",
+        "Wood Cutting and Shaping",
+        "Surface Finishing",
+        "Assembly Assistance",
+        "Workplace Safety"
+      ],
+      "eligibility": "5th grade pass preferred",
+      "qualification": "Certificate in Assistant Carpenter — Furniture & Fittings Skill Council (FFSC)",
+      "duration": "Approximately 220–240 notional hours",
+      "description": "Entry-level carpentry role covering basic woodworking, hand tool operation, wood cutting, shaping, surface finishing, and assisting senior carpenters in furniture fabrication and installation. Suitable for individuals with no prior formal training seeking employment in the furniture manufacturing or construction sector.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "Furniture & Fittings Skill Council (FFSC)",
+        "document": "Qualification Pack: Assistant Carpenter (FFS/Q2201)",
+        "url": "https://ffsc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "C-002",
+      "title": "Carpenter",
+      "qp_code": "FFS/Q2203",
+      "nsqf_level": 4.5,
+      "sector": "Carpentry, Construction & Skilled Trades",
+      "required_skills": [
+        "Woodworking",
+        "Furniture Fabrication",
+        "Power Tools Operation",
+        "Joinery",
+        "Wood Finishing",
+        "Measurement and Layout"
+      ],
+      "gap_skills_covered": [
+        "Advanced Joinery",
+        "Cabinet and Door Fabrication",
+        "Kitchen Furniture Installation",
+        "Blueprint Reading",
+        "Client Interaction"
+      ],
+      "eligibility": "Relevant industry experience required (approximately 4 years); foundational carpentry knowledge required",
+      "qualification": "Certificate in Carpenter — Furniture & Fittings Skill Council (FFSC)",
+      "duration": "Approximately 720 notional hours (for specialised streams including theory, practical, and OJT)",
+      "description": "Professional-level carpentry qualification covering fabrication, assembly, and installation of wooden furniture, doors, windows, and kitchen cabinets. Suitable for experienced carpenters seeking formal certification and advancement to supervisory or entrepreneurial roles.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Furniture & Fittings Skill Council (FFSC)",
+        "document": "Qualification Pack: Carpenter (FFS/Q2203)",
+        "url": "https://ffsc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "C-003",
+      "title": "Assistant Shuttering Carpenter",
+      "qp_code": "CON/Q0302",
+      "nsqf_level": 3,
+      "sector": "Carpentry, Construction & Skilled Trades",
+      "required_skills": [
+        "Woodworking",
+        "Material Handling",
+        "Basic Measurement",
+        "Hand Tools Operation"
+      ],
+      "gap_skills_covered": [
+        "Formwork (Shuttering) Assembly",
+        "Reinforced Cement Concrete Formwork",
+        "Structural Safety Practices",
+        "Dismantling and Storage",
+        "Construction Site Safety"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Assistant Shuttering Carpenter — Construction Skill Development Council of India (CSDCI)",
+      "duration": "Not specified in source",
+      "description": "Covers preparation, assembly, and dismantling of wooden formwork (shutters) for Reinforced Cement Concrete (RCC) structures at construction sites. Entry-level role suited for individuals seeking employment in the construction sector with basic woodworking background.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "Construction Skill Development Council of India (CSDCI)",
+        "document": "Qualification Pack: Assistant Shuttering Carpenter (CON/Q0302)",
+        "url": "https://csdcindia.org"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "C-004",
+      "title": "Plumber (General)",
+      "qp_code": "PSC/Q0104",
+      "nsqf_level": 4,
+      "sector": "Carpentry, Construction & Skilled Trades",
+      "required_skills": [
+        "Pipe Fitting",
+        "Plumbing Tools Operation",
+        "Basic Sanitation Systems",
+        "Water Supply Systems",
+        "Blueprint Reading"
+      ],
+      "gap_skills_covered": [
+        "Domestic Plumbing Installation",
+        "Drainage System Maintenance",
+        "Water Heating Systems",
+        "Sanitary Ware Installation",
+        "Leak Detection and Repair"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Plumber (General) — Water Management & Plumbing Skill Council (WMPSC)",
+      "duration": "Not specified in source",
+      "description": "Professional plumbing qualification covering domestic and commercial plumbing installation, maintenance, and repair. Includes water supply systems, drainage, sanitary ware installation, and basic troubleshooting. In high demand across urban and semi-urban construction markets.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Water Management & Plumbing Skill Council (WMPSC)",
+        "document": "Qualification Pack: Plumber (General) (PSC/Q0104)",
+        "url": "https://wmpsc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "R-001",
+      "title": "Retail Sales Assistant",
+      "qp_code": "RAS/Q0103",
+      "nsqf_level": 3,
+      "sector": "Retail & Handicrafts",
+      "required_skills": [
+        "Customer Service",
+        "Sales",
+        "Communication",
+        "Basic Mathematics",
+        "Inventory Awareness"
+      ],
+      "gap_skills_covered": [
+        "Point-of-Sale Operations",
+        "Product Knowledge",
+        "Customer Handling",
+        "Visual Merchandising Basics",
+        "Cash Handling"
+      ],
+      "eligibility": "10th grade pass",
+      "qualification": "Certificate in Retail Sales Assistant — Retailers Association's Skill Council of India (RASCI)",
+      "duration": "Approximately 390 notional hours",
+      "description": "Equips individuals with skills for front-end retail operations including customer service, product demonstrations, billing, and inventory basics. Suitable for those seeking employment in organised retail stores, supermarkets, or standalone shops.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "Retailers Association's Skill Council of India (RASCI)",
+        "document": "Qualification Pack: Retail Sales Assistant (RAS/Q0103)",
+        "url": "https://rasci.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "R-002",
+      "title": "Carpet Weaver",
+      "qp_code": "HCS/Q5701",
+      "nsqf_level": 3,
+      "sector": "Retail & Handicrafts",
+      "required_skills": [
+        "Handloom Weaving",
+        "Yarn Handling",
+        "Pattern Following",
+        "Knotting",
+        "Colour Matching"
+      ],
+      "gap_skills_covered": [
+        "Carpet Knot Techniques",
+        "Warp and Weft Preparation",
+        "Design Interpretation",
+        "Quality Checking",
+        "Loom Maintenance"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Carpet Weaver — Handicrafts and Carpet Sector Skill Council (HCSSC)",
+      "duration": "Not specified in source",
+      "description": "Covers traditional hand-knotted and tufted carpet weaving techniques including loom setup, knotting methods, pattern following, and quality inspection. Relevant for artisans in carpet-weaving clusters in Uttar Pradesh, Rajasthan, Jammu & Kashmir, and other regions.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Handicrafts and Carpet Sector Skill Council (HCSSC)",
+        "document": "Qualification Pack: Carpet Weaver (HCS/Q5701)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "R-003",
+      "title": "Jute Handloom Weaver",
+      "qp_code": "HCS/Q7402",
+      "nsqf_level": 4,
+      "sector": "Retail & Handicrafts",
+      "required_skills": [
+        "Handloom Weaving",
+        "Jute Yarn Handling",
+        "Loom Operation",
+        "Weaving Patterns",
+        "Fabric Quality Checking"
+      ],
+      "gap_skills_covered": [
+        "Jute Fibre Preparation",
+        "Loom Maintenance",
+        "Product Quality Standards",
+        "Design Variation",
+        "Market Linkage for Handloom Products"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Jute Handloom Weaver — Handicrafts and Carpet Sector Skill Council (HCSSC)",
+      "duration": "Not specified in source",
+      "description": "Focuses on jute handloom weaving techniques for producing bags, home furnishing items, and decorative products. Relevant for artisans in jute-producing regions (West Bengal, Bihar, Assam, Odisha) seeking to formalise skills and access better markets.",
+      "employment_type": ["self-employment", "wage-employment"],
+      "source": {
+        "organization": "Handicrafts and Carpet Sector Skill Council (HCSSC)",
+        "document": "Qualification Pack: Jute Handloom Weaver (HCS/Q7402)",
+        "url": "https://hcssc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "D-001",
+      "title": "Domestic Data Entry Operator",
+      "qp_code": "SSC/Q2212",
+      "nsqf_level": 3,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Computer Operation",
+        "Typing",
+        "Digital Literacy",
+        "Basic Internet Usage",
+        "Data Handling"
+      ],
+      "gap_skills_covered": [
+        "Data Entry and Verification",
+        "Office Automation (MS Word, MS Excel)",
+        "Workplace Communication",
+        "Data Accuracy and Quality",
+        "Workplace Safety"
+      ],
+      "eligibility": "10th grade pass",
+      "qualification": "Certificate in Domestic Data Entry Operator — IT-ITeS Sector Skills Council NASSCOM",
+      "duration": "Approximately 400–440 notional hours (100 hours theory + 300 hours practical; some versions include 40 hours for employability/entrepreneurship skills)",
+      "description": "Trains individuals to enter, update, verify, and retrieve data using computers, office software, and databases. Covers basic computer operation, typing proficiency, MS Office, and BPO/data-processing fundamentals. Entry point for IT-enabled service sector employment.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "IT-ITeS Sector Skills Council NASSCOM",
+        "document": "Qualification Pack: Domestic Data Entry Operator (SSC/Q2212)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "D-002",
+      "title": "Social Media Executive",
+      "qp_code": "MES/Q0702",
+      "nsqf_level": 4,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Digital Literacy",
+        "Social Media Usage",
+        "Content Creation",
+        "Basic Marketing",
+        "Communication"
+      ],
+      "gap_skills_covered": [
+        "Social Media Strategy",
+        "Content Planning",
+        "Platform Analytics",
+        "Online Community Management",
+        "Digital Advertising Basics",
+        "Online Selling"
+      ],
+      "eligibility": "Not specified in source",
+      "qualification": "Certificate in Social Media Executive — Media and Entertainment Skills Council (MESC)",
+      "duration": "Not specified in source",
+      "description": "Covers the skills required to manage social media accounts, create content, execute digital campaigns, and track basic analytics. Highly relevant for self-employed artisans, small business owners, and entrepreneurs seeking to market products online or support businesses with digital presence.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Media and Entertainment Skills Council (MESC)",
+        "document": "Qualification Pack: Social Media Executive (MES/Q0702)",
+        "url": "https://mescindia.org"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "D-003",
+      "title": "Social Media Manager",
+      "qp_code": "MES/Q0703",
+      "nsqf_level": 5,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Digital Marketing",
+        "Social Media Management",
+        "Content Strategy",
+        "Analytics",
+        "Team Coordination"
+      ],
+      "gap_skills_covered": [
+        "Campaign Planning and Execution",
+        "Performance Reporting",
+        "Influencer Coordination",
+        "Paid Advertising Management",
+        "Brand Management"
+      ],
+      "eligibility": "Postgraduate degree; or graduate degree with 1–2 years of relevant experience; or diploma with 2 years of experience; or Social Media Executive (NSQF Level 4) certification with 3 years of experience",
+      "qualification": "Certificate in Social Media Manager — Media and Entertainment Skills Council (MESC)",
+      "duration": "Not specified in source",
+      "description": "Advanced digital qualification for managing social media strategy, leading campaigns, overseeing teams, and preparing analytics reports for organisations or as a freelancer/consultant. Career progression from Social Media Executive (Level 4).",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Media and Entertainment Skills Council (MESC)",
+        "document": "Qualification Pack: Social Media Manager (MES/Q0703)",
+        "url": "https://mescindia.org"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "B-001",
+      "title": "Assistant Beauty Therapist",
+      "qp_code": "BWS/Q0101",
+      "nsqf_level": 3,
+      "sector": "Beauty & Wellness",
+      "required_skills": [
+        "Basic Skin Care",
+        "Hair Removal",
+        "Personal Hygiene and Grooming",
+        "Customer Service"
+      ],
+      "gap_skills_covered": [
+        "Basic Facial and Skin Treatments",
+        "Simple Makeup Application",
+        "Manicure and Pedicure",
+        "Work Area Preparation and Maintenance",
+        "Health and Safety in Salon",
+        "Digital Literacy Basics"
+      ],
+      "eligibility": "8th grade pass; minimum age 16 years",
+      "qualification": "Certificate in Assistant Beauty Therapist — Beauty & Wellness Sector Skill Council (B&WSSC)",
+      "duration": "Approximately 290–350 notional hours",
+      "description": "Entry-level beauty and wellness qualification covering skin care services, hair removal, basic makeup, manicure, pedicure, and salon work area maintenance. Suitable for individuals seeking employment or self-employment in beauty parlours and salons.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Beauty & Wellness Sector Skill Council (B&WSSC)",
+        "document": "Qualification Pack: Assistant Beauty Therapist (BWS/Q0101)",
+        "url": "https://www.bwssc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "B-002",
+      "title": "Hair Dresser and Stylist",
+      "qp_code": "BWS/Q0202",
+      "nsqf_level": 4,
+      "sector": "Beauty & Wellness",
+      "required_skills": [
+        "Hair Styling",
+        "Basic Hair Care",
+        "Customer Service",
+        "Salon Hygiene"
+      ],
+      "gap_skills_covered": [
+        "Shampooing and Conditioning",
+        "Blow Drying and Advanced Haircuts",
+        "Creative Colouring",
+        "Perming and Hair Relaxing",
+        "Straightening Techniques",
+        "Salon Client Interaction"
+      ],
+      "eligibility": "10th grade pass; minimum age 18 years",
+      "qualification": "Certificate in Hair Dresser and Stylist — Beauty & Wellness Sector Skill Council (B&WSSC)",
+      "duration": "Approximately 390–450 notional hours",
+      "description": "Professional hairdressing qualification covering advanced hair care services including cutting, colouring, perming, straightening, and client consultation. Enables employment in salons or self-employment as a freelance stylist or salon owner.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "Beauty & Wellness Sector Skill Council (B&WSSC)",
+        "document": "Qualification Pack: Hair Dresser and Stylist (BWS/Q0202)",
+        "url": "https://www.bwssc.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "F-001",
+      "title": "Food Products Packaging Technician",
+      "qp_code": "FIC/Q7001",
+      "nsqf_level": 4,
+      "sector": "Food Processing",
+      "required_skills": [
+        "Food Handling",
+        "Machine Operation",
+        "Quality Checking",
+        "Hygiene Practices",
+        "Basic Measurement"
+      ],
+      "gap_skills_covered": [
+        "Food Packaging Standards (FSSAI)",
+        "Packing Machine Calibration",
+        "Labelling and Coding",
+        "Quality Assurance in Food Packaging",
+        "Documentation and Record Keeping"
+      ],
+      "eligibility": "10th grade pass or 8th grade pass with relevant industry experience",
+      "qualification": "Certificate in Food Products Packaging Technician — Food Industry Capacity & Skill Initiative (FICSI)",
+      "duration": "Not specified in source",
+      "description": "Covers food packaging operations including machine operation, quality checking, labelling, and food safety compliance. Suitable for individuals seeking employment in food processing units, packaged food companies, or FMCG sector. Aligned with FSSAI and food safety standards.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "Food Industry Capacity & Skill Initiative (FICSI)",
+        "document": "Qualification Pack: Food Products Packaging Technician (FIC/Q7001)",
+        "url": "https://ficsi.in"
+      },
+      "last_verified": "2026-09-25"
+    }
+  ]
+}
