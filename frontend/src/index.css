@@ -1102,3 +1102,84 @@ input, textarea {
   color: var(--primary-700);
   border-color: var(--primary-300);
 }
+
+/* Preference alignment chips */
+.chip-pref {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.chip-pref.aligned {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+}
+
+.chip-pref.mismatch {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* Mobile & Kiosk Responsiveness */
+@media (max-width: 640px) {
+  .welcome-hero {
+    padding: 2rem 1.25rem;
+  }
+
+  .welcome-title {
+    font-size: 2rem;
+  }
+
+  .welcome-tagline {
+    font-size: 1.15rem;
+  }
+
+  .language-options {
+    grid-template-columns: 1fr;
+  }
+
+  .results-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .results-title {
+    font-size: 1.6rem;
+  }
+
+  .card-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .match-percentage-badge {
+    align-self: flex-start;
+  }
+
+  .recommendation-card {
+    padding: 1.2rem;
+  }
+
+  .skills-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmap-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .text-input-row {
+    flex-direction: column;
+  }
+
+  .btn-send {
+    width: 100%;
+    justify-content: center;
+  }
+}

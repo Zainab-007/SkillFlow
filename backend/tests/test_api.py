@@ -77,8 +77,8 @@ def test_get_all_roles_returns_list():
     assert response.status_code == 200
     roles = response.json()
     assert isinstance(roles, list)
-    # We have exactly 20 roles in the current knowledge base
-    assert len(roles) == 20
+    # We have exactly 23 roles in the current knowledge base
+    assert len(roles) == 23
 
 
 def test_each_role_has_required_fields():
@@ -165,7 +165,7 @@ def test_match_endpoint_accepts_full_profile():
     body = response.json()
     assert "results" in body
     assert "total_roles_evaluated" in body
-    assert body["total_roles_evaluated"] == 20
+    assert body["total_roles_evaluated"] == 23
 
 
 def test_match_response_has_required_fields():
@@ -201,14 +201,14 @@ def test_match_empty_profile():
     assert response.status_code == 200
     body = response.json()
     assert "results" in body
-    assert len(body["results"]) == 20  # all roles returned
+    assert len(body["results"]) == 23  # all roles returned
 
 
 def test_match_skills_only():
     """A profile with only skills should still match cleanly."""
     response = client.post("/api/match", json={"skills": ["Sewing"]})
     assert response.status_code == 200
-    assert len(response.json()["results"]) == 20
+    assert len(response.json()["results"]) == 23
 
 
 def test_match_no_skills():

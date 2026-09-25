@@ -61,6 +61,19 @@ logger = logging.getLogger(__name__)
 _ALL_PROFILE_FIELDS = [
     "education",
     "current_occupation",
+    "current_activity",
+    "experience_years",
+    "skills",
+    "interests",
+    "preferred_specialization",
+    "mobility_constraint",
+    "employment_preference",
+    "location",
+]
+
+_CORE_PROFILE_FIELDS = [
+    "education",
+    "current_occupation",
     "experience_years",
     "skills",
     "interests",
@@ -90,8 +103,10 @@ def _merge_profile(existing: dict, update: Any) -> dict:
     Rules:
     - String fields: overwrite only if the new value is non-empty.
     - List fields (skills, interests): extend, deduplicating case-insensitively.
-    - Numeric fields (experience_years): overwrite if positive.
-    - Unknown keys from the LLM are silently dropped.
+      Remove placeholder values like "open to any" if concrete values arrive.
+    - Numeric fields (experience_years): overwrite if >= 0.
+    - Preferred specialization: preserve and also reflect in interests if not already present.
+    - Preserves earlier useful information across multiple turns.
     """
     if hasattr(update, "model_dump"):
         update_data = update.model_dump(exclude_none=True)
@@ -103,6 +118,8 @@ def _merge_profile(existing: dict, update: Any) -> dict:
     valid_string_fields = {
         "education",
         "current_occupation",
+        "current_activity",
+        "preferred_specialization",
         "mobility_constraint",
         "employment_preference",
         "location",
@@ -120,8 +137,16 @@ def _merge_profile(existing: dict, update: Any) -> dict:
         elif key in valid_list_fields:
             if isinstance(value, list):
                 current = merged.get(key, [])
+                # If current only has generic placeholders and new concrete values arrived, clear placeholders
+                placeholder_terms = {
+                    "open to any", "open to anything", "none",
+                    "not specified", "any", "no preference", "project building",
+                }
+                if any(isinstance(v, str) and v.lower().strip() not in placeholder_terms for v in value):
+                    current = [v for v in current if isinstance(v, str) and v.lower().strip() not in placeholder_terms]
+
                 # Deduplicate case-insensitively, preserving order
-                existing_lower = {v.lower() for v in current}
+                existing_lower = {v.lower() for v in current if isinstance(v, str)}
                 for item in value:
                     if isinstance(item, str) and item.strip():
                         if item.strip().lower() not in existing_lower:
@@ -133,7 +158,13 @@ def _merge_profile(existing: dict, update: Any) -> dict:
             if isinstance(value, (int, float)) and value >= 0:
                 merged[key] = value
 
-        # Silently drop unknown keys from LLM
+    # If preferred_specialization is set, ensure it is also represented in interests
+    spec = merged.get("preferred_specialization")
+    if spec and isinstance(spec, str) and spec.strip():
+        cur_interests = merged.get("interests", [])
+        if not any(spec.strip().lower() == i.lower() for i in cur_interests):
+            cur_interests.append(spec.strip())
+            merged["interests"] = cur_interests
 
     return merged
 
@@ -144,12 +175,21 @@ def _profile_completeness(profile: dict) -> tuple[list[str], list[str]]:
 
     A list field counts as complete when it has at least one entry.
     A scalar field counts as complete when it has a non-None, non-empty value.
+    Note: current_activity can satisfy the current_occupation requirement.
     """
     completed = []
     remaining = []
 
-    for field in _ALL_PROFILE_FIELDS:
+    for field in _CORE_PROFILE_FIELDS:
         value = profile.get(field)
+        # If current_occupation is not set, but current_activity or skills exist, count occupation as completed
+        if field == "current_occupation" and (value is None or (isinstance(value, str) and not value.strip())):
+            act = profile.get("current_activity")
+            skills = profile.get("skills")
+            if (isinstance(act, str) and act.strip()) or (isinstance(skills, list) and len(skills) > 0):
+                completed.append(field)
+                continue
+
         if value is None:
             remaining.append(field)
         elif isinstance(value, list) and len(value) == 0:
@@ -172,10 +212,10 @@ def is_profile_sufficient_for_completion(
 
     Required fields:
       - education: non-empty string (e.g. '8th pass', '10th pass', 'No formal schooling')
-      - current_occupation: non-empty string OR skills non-empty
+      - current_occupation OR current_activity OR skills non-empty
       - experience_years: numeric (>= 0, 0.0 is valid for beginners/no prior experience)
       - skills: non-empty list
-      - interests: non-empty list (e.g. domains/trades or ['Open to any'])
+      - interests: non-empty list OR preferred_specialization
       - mobility_constraint: non-empty string (e.g. 'Home-based preferred', 'None')
       - employment_preference: non-empty string ('Self-employment', 'Wage-employment', 'Either')
       - location: non-empty string (city, district, town, or state)
@@ -188,15 +228,17 @@ def is_profile_sufficient_for_completion(
     has_edu = isinstance(edu, str) and bool(edu.strip())
 
     occ = profile.get("current_occupation")
+    act = profile.get("current_activity")
     skills = profile.get("skills") or []
     has_skills = isinstance(skills, list) and len(skills) > 0
-    has_occ = (isinstance(occ, str) and bool(occ.strip())) or has_skills
+    has_occ = (isinstance(occ, str) and bool(occ.strip())) or (isinstance(act, str) and bool(act.strip())) or has_skills
 
     exp = profile.get("experience_years")
     has_exp = exp is not None and isinstance(exp, (int, float))
 
     interests = profile.get("interests") or []
-    has_interests = isinstance(interests, list) and len(interests) > 0
+    spec = profile.get("preferred_specialization")
+    has_interests = (isinstance(interests, list) and len(interests) > 0) or (isinstance(spec, str) and bool(spec.strip()))
 
     mob = profile.get("mobility_constraint")
     has_mob = isinstance(mob, str) and bool(mob.strip())
@@ -266,34 +308,45 @@ def _build_system_prompt(
 explore skill-development and training opportunities under PM-AJAY.
 
 Your goal is to build a structured livelihood profile through natural conversation.
-You collect information across these 8 core fields:
+You collect information across these profile fields:
 - education (e.g. "5th pass", "8th pass", "10th pass", "12th pass", "Graduate", or "No formal schooling")
-- current_occupation (e.g. "Tailoring", "Farming", "Homemaker", "None")
+- current_occupation (formal job/trade e.g. "Tailoring", "Farming", "Homemaker", "Student", "None")
+- current_activity (what the user is currently doing practically, e.g. "Tailoring clothes at home", "Cultivating crops on family land", "Building projects", "Food preparation", "Assisting at local shop")
 - experience_years (numeric, years of work experience; use 0.0 if beginner or no prior formal work)
-- skills (list of practical skills the person already has)
-- interests (list of trades, skills, or domains they want to learn or work in)
+- skills (list of practical, artisanal, operational, or technical skills the person already has, e.g. ["Sewing", "Cutting fabric"] or ["Crop cultivation", "Irrigation"] or ["Food prep", "Cooking"] or ["Python", "MySQL"])
+- interests (list of trades, skills, or domains they want to learn or work in, e.g. ["Apparel & Fashion Design"], ["Organic Farming"], ["Food Processing"], ["Beauty & Wellness"], ["Web Development"])
+- preferred_specialization (specific niche or direction within a trade, e.g. "Fashion Design", "Dairy Farming", "Bakery", "Backend Development", "Bridal Makeup")
 - mobility_constraint (e.g. "Home-based preferred", "Can travel locally", "None")
 - employment_preference ("Self-employment", "Wage-employment", or "Either")
 - location (city, district, town, or state)
 {profile_summary}{remaining_summary}
 
-RULES:
-1. Ask ONLY ONE short, voice-friendly question per turn.
-2. NEVER ask for information already known in the profile status above.
-3. Extract information silently into profile_update — do NOT narrate what you extracted.
-4. Do NOT fabricate information. Only record what the user clearly states or implies.
-5. If the user's answer is ambiguous, ask a natural clarification.
-6. Target missing fields: keep each turn focused on asking for one missing field.
-7. Handle declines gracefully: If the user says they don't know, have no preference, or want to skip \
+SEMANTIC EXTRACTION RULES (GENERIC ACROSS ALL LIVELIHOOD DOMAINS):
+1. Distinguish CURRENT ACTIVITY vs CURRENT OCCUPATION vs INTEREST vs PREFERRED SPECIALIZATION vs EXISTING SKILLS:
+   - current_activity: Practical day-to-day engagement or self-directed project work (e.g. "stitching clothes", "farming paddy", "building software projects", "cooking meals"). Do NOT record ongoing work activities as a generic interest.
+   - current_occupation: Formal occupational title or status (e.g. "Tailor", "Farmer", "Homemaker", "Student", "Unemployed").
+   - interests: Broader trades or vocational areas they want to explore or enter (e.g. "Fashion Design", "Dairy farming", "Web Development", "Beauty services", "Food processing").
+   - preferred_specialization: Specific sub-area, niche, or direction they prefer within a trade (e.g. "Fashion Design", "Dairy Farming", "Backend Development", "Hair Styling", "Bakery").
+   - skills: Concrete practical or technical skills the person already knows (e.g. ["Sewing", "Stitching"], ["Python", "Java", "MySQL"], ["Animal care"], ["Cooking"]). Extract verified skills even when stated naturally in a sentence. Never list role requirements or aspirational goals as existing skills unless confirmed by the user.
+2. Consider the ENTIRE conversation history when updating the profile:
+   - Explicit later clarification must NOT erase earlier useful information.
+   - Skills and interests accumulate across turns.
+3. Ask ONLY ONE short, voice-friendly question per turn.
+4. NEVER ask for information already known in the profile status above.
+5. Extract information silently into profile_update — do NOT narrate what you extracted.
+6. Do NOT fabricate information. Only record what the user clearly states or implies.
+7. If the user's answer is ambiguous, ask a natural clarification.
+8. Target missing fields: keep each turn focused on asking for one missing field.
+9. Handle declines gracefully: If the user says they don't know, have no preference, or want to skip \
 (e.g., "no experience", "no preference", "open to anything"), record that (e.g., experience_years: 0.0, \
 interests: ["Open to any"], mobility_constraint: "None") and move on to the next missing field without repeating.
-8. INTERVIEW COMPLETION RULES:
-   - NEVER set interview_complete=true while still asking a question.
-   - Set interview_complete=false on every intermediate turn while asking questions.
-   - Set interview_complete=true ONLY when all required fields have been addressed AND your assistant_question \
+10. INTERVIEW COMPLETION RULES:
+    - NEVER set interview_complete=true while still asking a question.
+    - Set interview_complete=false on every intermediate turn while asking questions.
+    - Set interview_complete=true ONLY when all required fields have been addressed AND your assistant_question \
 is a final closing statement thanking the user.
-9. Ask questions in {lang_name}. Keep internal profile field names in English.
-10. Your tone should be encouraging, respectful, and conversational, NOT like an interrogation or form.
+11. Ask questions in {lang_name}. Keep internal profile field names in English.
+12. Your tone should be encouraging, respectful, and conversational, NOT like an interrogation or form.
 
 OUTPUT FORMAT:
 You must respond ONLY with valid JSON matching this exact schema:

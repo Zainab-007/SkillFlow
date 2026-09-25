@@ -77,10 +77,10 @@ Each role record in `data/nsqf_roles.json` follows this schema:
 | Agriculture & Allied Activities | 3 | A-001, A-002, A-003 |
 | Carpentry, Construction & Skilled Trades | 4 | C-001, C-002, C-003, C-004 |
 | Retail & Handicrafts | 3 | R-001, R-002, R-003 |
-| Digital & Entrepreneurship | 3 | D-001, D-002, D-003 |
+| Digital & Entrepreneurship | 6 | D-001, D-002, D-003, D-004, D-005, D-006 |
 | Beauty & Wellness | 2 | B-001, B-002 |
 | Food Processing | 1 | F-001 |
-| **Total** | **20** | |
+| **Total** | **23** | |
 
 ---
 
@@ -90,9 +90,9 @@ Each role record in `data/nsqf_roles.json` follows this schema:
 |---|---|
 | 2.5 | T-001 |
 | 3 | T-004, A-001, A-003, C-001, C-003, R-001, R-002, D-001, B-001 |
-| 4 | T-002, T-003, A-002, C-004, R-003, D-002, B-002, F-001 |
+| 4 | T-002, T-003, A-002, C-004, R-003, D-002, D-004, B-002, F-001 |
 | 4.5 | C-002 |
-| 5 | D-003 |
+| 5 | D-003, D-005, D-006 |
 
 ---
 

@@ -568,7 +568,7 @@ def test_match_still_passes():
         "current_occupation": "Tailoring",
     })
     assert response.status_code == 200
-    assert len(response.json()["results"]) == 20
+    assert len(response.json()["results"]) == 23
 
 
 # ---------------------------------------------------------------------------

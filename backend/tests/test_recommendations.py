@@ -170,7 +170,7 @@ def test_empty_profile_handled_safely():
     data = response.json()
     assert data["total_recommended"] == 0
     assert data["recommendations"] == []
-    assert data["total_evaluated"] == 20
+    assert data["total_evaluated"] == 23
 
 
 # ---------------------------------------------------------------------------

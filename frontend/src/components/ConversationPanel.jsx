@@ -101,9 +101,15 @@ export default function ConversationPanel({
               type="button"
               className={`voice-toggle-btn ${voiceEnabled ? 'active' : ''}`}
               onClick={onToggleVoice}
-              title={voiceEnabled ? 'Mute voice responses' : 'Enable voice responses'}
+              title={
+                voiceEnabled
+                  ? (isHindi ? 'आवाज़ बंद करें' : 'Mute voice responses')
+                  : (isHindi ? 'आवाज़ चालू करें' : 'Enable voice responses')
+              }
             >
-              {voiceEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+              {voiceEnabled
+                ? (isHindi ? '🔊 आवाज़ चालू' : '🔊 Voice On')
+                : (isHindi ? '🔇 आवाज़ बंद' : '🔇 Voice Off')}
             </button>
           </div>
         </div>

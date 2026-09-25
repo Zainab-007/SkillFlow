@@ -89,6 +89,8 @@ class MatchResult:
     score: float
     matched_skills: list[str] = field(default_factory=list)
     matched_interests: list[str] = field(default_factory=list)
+    matched_specialization: list[str] = field(default_factory=list)
+    occupation_matched: bool = False
     skill_gaps: list[str] = field(default_factory=list)
     employment_type: list[str] = field(default_factory=list)
 
@@ -116,14 +118,16 @@ SKILL_SYNONYMS: dict[str, set[str]] = {
     "बुनाई": {"weaving", "handloom", "bunai", "weaver", "बुनाई", "हथकरघा"},
 
     # Food Processing
-    "cooking": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना", "खाना बनाना", "खाना पकाना", "रसोई", "भोजन"},
-    "home cooking": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "खाना बनाना", "खाना पकाना"},
-    "food handling": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "hygiene practices", "खाना बनाना", "खाना पकाना", "खाद्य"},
-    "food preparation": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "खाना बनाना"},
-    "खाना बनाना": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना बनाना", "खाना पकाना"},
-    "खाना पकाना": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "food processing", "hygiene practices", "खाना बनाना", "खाना पकाना"},
-    "खाना": {"cooking", "home cooking", "food handling", "food preparation", "खाना बनाना", "खाना पकाना"},
-    "रसोई": {"cooking", "home cooking", "food handling", "kitchen work"},
+    "cooking": {"cooking", "home cooking", "food preparation", "food handling", "food processing", "kitchen work", "food making", "खाना", "खाना बनाना", "खाना पकाना", "रसोई", "भोजन"},
+    "home cooking": {"cooking", "home cooking", "food preparation", "food handling", "food processing", "kitchen work", "food making", "खाना बनाना", "खाना पकाना"},
+    "food handling": {"food handling", "food storage", "safe food handling", "food preparation", "खाद्य हैंडलिंग"},
+    "food preparation": {"cooking", "home cooking", "food handling", "food preparation", "kitchen work", "food making", "खाना बनाना"},
+    "food processing": {"food processing", "food packaging", "preservation", "खाद्य प्रसंस्करण"},
+    "hygiene practices": {"hygiene practices", "food safety", "sanitation", "cleanliness"},
+    "खाना बनाना": {"cooking", "home cooking", "food preparation", "kitchen work", "food making", "खाना बनाना", "खाना पकाना"},
+    "खाना पकाना": {"cooking", "home cooking", "food preparation", "kitchen work", "food making", "खाना बनाना", "खाना पकाना"},
+    "खाना": {"cooking", "home cooking", "food preparation", "खाना बनाना", "खाना पकाना"},
+    "रसोई": {"cooking", "home cooking", "food preparation", "kitchen work"},
 
     # Agriculture & Allied
     "farming": {"farming", "kheti", "agriculture", "cultivation", "crop growing", "cultivator", "खेती", "कृषि", "फसल"},
@@ -156,6 +160,36 @@ SKILL_SYNONYMS: dict[str, set[str]] = {
     "कंप्यूटर": {"data entry", "computer", "typing", "computer operation"},
     "टाइपिंग": {"data entry", "computer", "typing", "computer operation"},
 
+    # Web Development
+    "web development": {"web development", "web developer", "website development", "web design"},
+    "web developer": {"web development", "web developer", "website development"},
+    "website development": {"web development", "web developer", "website development", "web design"},
+    "backend development": {"backend development", "back-end development", "backend architecture", "server-side development", "backend"},
+    "back-end development": {"backend development", "back-end development", "backend architecture", "server-side development", "backend"},
+    "frontend development": {"frontend development", "front-end development", "client-side development", "frontend"},
+    "front-end development": {"frontend development", "front-end development", "client-side development", "frontend"},
+
+    # Programming & Software
+    "programming": {"programming", "coding", "software programming", "computer programming"},
+    "coding": {"programming", "coding", "software programming"},
+    "software development": {"software development", "software engineering", "application development"},
+    "software developer": {"software developer", "software development", "software engineer"},
+    "software engineering": {"software development", "software engineering", "software architecture"},
+
+    # Technical Skills
+    "python": {"python", "python3", "python programming"},
+    "java": {"java", "core java", "java programming"},
+    "mysql": {"mysql", "sql", "relational database", "database basics", "rdbms"},
+    "sql": {"sql", "mysql", "database basics", "querying", "database"},
+    "database": {"database", "database management", "sql", "mysql", "database basics"},
+    "database management": {"database management", "database administration", "sql", "mysql", "rdbms", "database"},
+    "database basics": {"database basics", "database", "sql", "mysql", "relational database"},
+    "api": {"api", "api development", "api integration", "rest api"},
+    "html": {"html", "html5", "html/css"},
+    "css": {"css", "css3", "html/css"},
+    "html/css": {"html", "css", "html/css", "html5", "css3"},
+    "javascript": {"javascript", "js", "ecmascript"},
+
     # Retail & Sales
     "retail": {"retail", "sales", "shop", "store assistant", "customer service", "selling", "दुकान", "बिक्री"},
     "sales": {"retail", "sales", "shop", "store assistant", "customer service", "selling", "बिक्री"},
@@ -178,7 +212,7 @@ def _get_synonyms(term: str) -> set[str]:
     t = _normalise(term)
     syns = {t}
     for key, cluster in SKILL_SYNONYMS.items():
-        if key in t or t in key:
+        if key == t or (len(key) > 3 and key in t):
             syns.update(cluster)
     return syns
 
@@ -189,12 +223,38 @@ def _skill_match(user_skill: str, role_skill: str) -> bool:
 
     Checks:
       1. Direct string equality after normalisation
-      2. Bidirectional substring containment
+      2. Bidirectional substring containment with word-boundary guards
       3. Overlap in curated domain synonym clusters
     """
     u = _normalise(user_skill)
     r = _normalise(role_skill)
-    if u == r or u in r or r in u:
+    if u == r:
+        return True
+
+    # Guard against accidental substring matches between distinct tech terms
+    if (u == "java" and "javascript" in r) or (r == "java" and "javascript" in u):
+        return False
+    if (u == "sql" and "nosql" in r) or (r == "sql" and "nosql" in u):
+        return False
+
+    # Word-boundary phrase containment
+    padded_u = f" {u} "
+    padded_r = f" {r} "
+    if padded_u in padded_r or padded_r in padded_u:
+        return True
+
+    # Token-level overlap and stem prefix match
+    u_tokens = _tokens(u)
+    r_tokens = _tokens(r)
+    if any(ut in r_tokens for ut in u_tokens if len(ut) >= 3):
+        return True
+
+    if any(
+        (ut.startswith(rt) or rt.startswith(ut))
+        for ut in u_tokens
+        for rt in r_tokens
+        if min(len(ut), len(rt)) >= 4
+    ):
         return True
 
     u_syns = _get_synonyms(u)
@@ -257,40 +317,89 @@ def _compute_interest_score(
     return len(matched_interests) / len(interests), matched_interests
 
 
+def _compute_specialization_score(
+    specialization: str | None,
+    role: LivelihoodRole,
+) -> tuple[float, list[str]]:
+    """
+    Compute alignment between user's preferred specialization and the role.
+
+    Checks role title, sector, required_skills, gap_skills_covered, and description
+    using normalized terms and domain synonyms.
+    """
+    if not specialization or not specialization.strip():
+        return 0.0, []
+
+    s_clean = specialization.strip()
+    s_syns = _get_synonyms(s_clean)
+    haystack = _normalise(
+        f"{role.title} {role.sector} {' '.join(role.required_skills)} {' '.join(role.gap_skills_covered)} {role.description}"
+    )
+
+    if any(s in haystack for s in s_syns):
+        return 1.0, [s_clean]
+
+    return 0.0, []
+
+
 def _compute_occupation_score(
     occupation: str | None,
+    activity: str | None,
     role: LivelihoodRole,
     experience_years: float | None = None,
     has_matched_skills: bool = False,
-) -> float:
+) -> tuple[float, bool]:
     """
-    Compute overlap between user occupation / experience and the role.
+    Compute overlap between user occupation / activity / experience and the role.
 
     Returns
     -------
-    float
-        Score [0.0, 1.0].
+    tuple[float, bool]
+        (score [0.0, 1.0], occupation_matched: bool)
     """
     occ_score = 0.0
-    if occupation:
-        occ_tokens = _tokens(occupation)
-        if occ_tokens:
+    occ_matched = False
+    text_to_check = []
+    if occupation and occupation.strip():
+        text_to_check.append(occupation.strip())
+    if activity and activity.strip():
+        text_to_check.append(activity.strip())
+
+    if text_to_check:
+        combined_text = " ".join(text_to_check)
+        tokens = _tokens(combined_text)
+        stopwords = {
+            "i", "am", "a", "an", "the", "in", "and", "of", "for", "with",
+            "work", "working", "worker", "etc", "doing", "making", "building",
+            "build", "project", "projects", "help", "helping", "various", "general",
+        }
+        filtered_tokens = [t for t in tokens if t not in stopwords and len(t) > 2]
+        if filtered_tokens:
             haystack = _normalise(
-                role.title + " " + " ".join(role.required_skills)
+                role.title + " " + role.sector + " " + " ".join(role.required_skills)
             )
             matched = 0
-            for tok in occ_tokens:
+            for tok in filtered_tokens:
                 tok_syns = _get_synonyms(tok)
                 if any(s in haystack for s in tok_syns):
                     matched += 1
-            occ_score = matched / len(occ_tokens)
+            if matched > 0:
+                occ_score = matched / len(filtered_tokens)
+                occ_matched = True
 
-    # Experience alignment: if occupation doesn't match by name (e.g. Homemaker, None),
-    # but the user has practical years of experience in matching skills, credit that experience.
-    if occ_score == 0.0 and experience_years and experience_years > 0 and has_matched_skills:
-        occ_score = min(experience_years / 5.0, 1.0) * 0.5
+    # Experience alignment:
+    # 1. If occupation itself matched and user has years of experience, credit that experience
+    if occ_matched and experience_years and experience_years > 0:
+        occ_score = min(occ_score + (min(experience_years / 5.0, 1.0) * 0.3), 1.0)
+    # 2. If occupation is neutral / informal (e.g. Homemaker, None, Student) and user has verified matching skills,
+    # credit that practical domestic / informal experience.
+    elif not occ_matched and experience_years and experience_years > 0 and has_matched_skills:
+        occ_name = (occupation or "").lower().strip()
+        is_informal_or_neutral = occ_name in {"", "none", "homemaker", "student", "unemployed", "fresher"}
+        if is_informal_or_neutral:
+            occ_score = min(experience_years / 5.0, 1.0) * 0.5
 
-    return occ_score
+    return min(occ_score, 1.0), occ_matched
 
 
 def _compute_skill_gaps(
@@ -311,17 +420,17 @@ def _compute_skill_gaps(
 
 def _employment_bonus(preference: str | None, role: LivelihoodRole) -> float:
     """
-    Return EMPLOYMENT_BONUS if the role semantically supports the user's preference.
+    Return EMPLOYMENT_BONUS if the role semantically supports the user's specific preference.
 
     - "wage-employment" favors roles supporting wage employment (and not strictly self-employed).
     - "self-employment" favors roles supporting self-employment / entrepreneurship.
-    - "either" / flexible receives the full bonus without mismatch penalty.
+    - "either" / flexible indicates no preference restriction and awards no artificial preference bonus.
     """
     if not preference:
         return 0.0
     pref = _normalise(preference)
     if "either" in pref or "both" in pref or "flexible" in pref or "any" in pref or pref == "":
-        return EMPLOYMENT_BONUS
+        return 0.0
 
     wants_wage = any(k in pref for k in ("wage", "job", "salaried", "service"))
     wants_self = any(k in pref for k in ("self", "business", "own"))
@@ -354,6 +463,13 @@ def match_profile(
     """
     Match a user profile against the knowledge base and return scored results.
 
+    Conceptual priority:
+    1. Preferred specialization
+    2. Explicit interests
+    3. Relevant existing skills
+    4. Relevant experience / occupation / activity
+    5. Employment preference bonus
+
     Parameters
     ----------
     profile : UserProfile
@@ -378,21 +494,50 @@ def match_profile(
         interest_score, matched_interests = _compute_interest_score(
             profile.interests, role
         )
-        occupation_score = _compute_occupation_score(
+        spec_score, matched_spec = _compute_specialization_score(
+            profile.preferred_specialization, role
+        )
+        occupation_score, occ_matched = _compute_occupation_score(
             profile.current_occupation,
+            getattr(profile, "current_activity", None),
             role,
             experience_years=profile.experience_years,
             has_matched_skills=len(matched_skills) > 0,
         )
         bonus = _employment_bonus(profile.employment_preference, role)
 
-        raw_score = (
-            WEIGHT_SKILLS * skill_score
-            + WEIGHT_INTERESTS * interest_score
-            + WEIGHT_OCCUPATION * occupation_score
-            + bonus
+        # CRITICAL HOLISTIC RULE:
+        # A role MUST have genuine semantic connection to the user profile.
+        # If there are zero matching skills, zero matching interests, zero matching specialization,
+        # and no matching occupation or experience, the role has ZERO relevance.
+        # An employment preference alone (e.g. "Either", "Wage-employment") must NEVER
+        # award points to an otherwise unrelated role.
+        has_core_evidence = (
+            len(matched_skills) > 0
+            or len(matched_interests) > 0
+            or len(matched_spec) > 0
+            or occ_matched
+            or (len(matched_skills) > 0 and profile.experience_years and profile.experience_years > 0)
         )
-        final_score = round(min(raw_score, 1.0), 4)
+
+        if profile.preferred_specialization:
+            core_score = (
+                0.25 * spec_score
+                + 0.25 * interest_score
+                + 0.30 * skill_score
+                + 0.15 * occupation_score
+            )
+        else:
+            core_score = (
+                WEIGHT_SKILLS * skill_score
+                + WEIGHT_INTERESTS * interest_score
+                + WEIGHT_OCCUPATION * occupation_score
+            )
+
+        if not has_core_evidence or core_score <= 0.0:
+            final_score = 0.0
+        else:
+            final_score = round(min(core_score + bonus, 1.0), 4)
 
         skill_gaps = _compute_skill_gaps(profile.skills, role.gap_skills_covered)
 
@@ -405,6 +550,8 @@ def match_profile(
                 score=final_score,
                 matched_skills=matched_skills,
                 matched_interests=matched_interests,
+                matched_specialization=matched_spec,
+                occupation_matched=occ_matched,
                 skill_gaps=skill_gaps,
                 employment_type=role.employment_type,
             )

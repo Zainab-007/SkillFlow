@@ -550,6 +550,102 @@
       "last_verified": "2026-09-25"
     },
     {
+      "id": "D-004",
+      "title": "Web Developer",
+      "qp_code": "SSC/Q0503",
+      "nsqf_level": 4,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Web Development",
+        "HTML/CSS",
+        "JavaScript",
+        "Frontend Development",
+        "Database Basics"
+      ],
+      "gap_skills_covered": [
+        "Backend Development",
+        "API Integration",
+        "Web Application Security",
+        "Responsive Web Design",
+        "Version Control (Git)"
+      ],
+      "eligibility": "12th grade pass or IT diploma / Bachelor's in CS/IT or related field",
+      "qualification": "Certificate in Web Developer — IT-ITeS Sector Skills Council NASSCOM",
+      "duration": "Approximately 400 notional hours",
+      "description": "Designs, develops, and maintains responsive web applications, user interfaces, and server-side integration. Covers client-side programming (HTML, CSS, JavaScript), backend database connectivity, API integration, and web performance optimization. Aligned with NASSCOM IT-ITeS standards.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "IT-ITeS Sector Skills Council NASSCOM",
+        "document": "Qualification Pack: Web Developer (SSC/Q0503)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "D-005",
+      "title": "Software Developer",
+      "qp_code": "SSC/Q0501",
+      "nsqf_level": 5,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Programming",
+        "Python",
+        "Java",
+        "Data Structures",
+        "Software Engineering"
+      ],
+      "gap_skills_covered": [
+        "Backend Architecture",
+        "Database Management",
+        "API Development",
+        "Unit Testing and Debugging",
+        "Software Development Life Cycle (SDLC)"
+      ],
+      "eligibility": "Graduate degree (B.E./B.Tech/BCA/B.Sc in CS/IT) or 3-year diploma in Engineering/Technology",
+      "qualification": "Certificate in Software Developer — IT-ITeS Sector Skills Council NASSCOM",
+      "duration": "Approximately 450 notional hours",
+      "description": "Builds, tests, and maintains robust software applications and backend services using languages such as Python and Java. Covers object-oriented programming, database connectivity (SQL/MySQL), algorithm optimization, and automated testing in enterprise environments.",
+      "employment_type": ["wage-employment", "self-employment"],
+      "source": {
+        "organization": "IT-ITeS Sector Skills Council NASSCOM",
+        "document": "Qualification Pack: Software Developer (SSC/Q0501)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
+      "id": "D-006",
+      "title": "Database Administrator",
+      "qp_code": "SSC/Q0110",
+      "nsqf_level": 5,
+      "sector": "Digital & Entrepreneurship",
+      "required_skills": [
+        "Database Management",
+        "SQL",
+        "MySQL",
+        "Data Handling",
+        "System Administration"
+      ],
+      "gap_skills_covered": [
+        "Database Performance Tuning",
+        "Backup and Recovery",
+        "Query Optimization",
+        "Database Security & Access Control",
+        "Data Integrity Auditing"
+      ],
+      "eligibility": "12th grade pass with IT experience or Bachelor's in CS/IT/related quantitative field",
+      "qualification": "Certificate in Database Administrator — IT-ITeS Sector Skills Council NASSCOM",
+      "duration": "Approximately 400 notional hours",
+      "description": "Responsible for configuring, monitoring, and maintaining relational databases such as MySQL and PostgreSQL. Covers SQL querying, performance tuning, data security, backup and recovery procedures, and system administration.",
+      "employment_type": ["wage-employment"],
+      "source": {
+        "organization": "IT-ITeS Sector Skills Council NASSCOM",
+        "document": "Qualification Pack: Database Administrator (SSC/Q0110)",
+        "url": "https://nqr.gov.in"
+      },
+      "last_verified": "2026-09-25"
+    },
+    {
       "id": "B-001",
       "title": "Assistant Beauty Therapist",
       "qp_code": "BWS/Q0101",

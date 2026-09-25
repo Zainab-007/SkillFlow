@@ -87,11 +87,13 @@ def _evaluate_preference_alignment(
 def _build_grounded_explanation(
     role_title: str,
     sector: str,
-    matched_skills: list[str],
+    skills_already_have: list[str],
     matched_interests: list[str],
-    experience_years: float | None,
-    current_occupation: str | None,
-    skill_gaps: list[str],
+    matched_specialization: list[str] | None = None,
+    experience_years: float | None = None,
+    current_occupation: str | None = None,
+    current_activity: str | None = None,
+    skill_gaps: list[str] | None = None,
     preference_caveat: str | None = None,
 ) -> str:
     """
@@ -101,37 +103,94 @@ def _build_grounded_explanation(
     """
     sentences = []
 
-    # 1. Skills / Occupation alignment
-    if matched_skills:
-        skill_str = ", ".join(matched_skills[:2])
-        if current_occupation and current_occupation.lower() not in {"none", "homemaker", "unemployed", "student"}:
+    # 1. Preferred specialization alignment (Highest priority)
+    if matched_specialization:
+        spec_str = ", ".join(matched_specialization[:2])
+        sentences.append(
+            f"Your focus on {spec_str} aligns directly with the core objectives of the {role_title} pathway."
+        )
+
+    # 2. Skills alignment (uses confirmed user skills that matched this role)
+def _build_grounded_explanation(
+    role_title: str,
+    sector: str,
+    skills_already_have: list[str],
+    matched_interests: list[str],
+    matched_specialization: list[str] | None,
+    experience_years: float | None,
+    current_occupation: str | None,
+    current_activity: str | None,
+    occupation_matched: bool = False,
+    skill_gaps: list[str] | None = None,
+    preference_caveat: str | None = None,
+    match_type: str = "primary",
+) -> str:
+    """
+    Construct a factual, grounded explanation strictly using reported profile
+    fields and knowledge-base role data. Never invents qualifications,
+    salaries, government guarantees, or external entities.
+    Never claims an occupation connects with a role unless occupation_matched is True.
+    """
+    sentences = []
+
+    if match_type == "alternative":
+        if skills_already_have:
+            skill_str = ", ".join(skills_already_have[:2])
             sentences.append(
-                f"Your practical experience in {current_occupation} and skills in {skill_str} align directly with this pathway."
+                f"Alternative pathway: Your recorded skills in {skill_str} align with this vocational pathway in the {sector} sector and may provide a potential alternative pathway."
             )
         else:
             sentences.append(
-                f"Your existing skills in {skill_str} provide a strong foundation for the {role_title} role."
+                f"Alternative pathway: This vocational pathway in the {sector} sector may provide a potential alternative option based on your reported background."
             )
-    elif current_occupation and current_occupation.lower() not in {"none", "homemaker", "unemployed", "student"}:
-        sentences.append(
-            f"Your work background in {current_occupation} connects with requirements in the {sector} sector."
-        )
+    else:
+        # 1. Preferred specialization alignment (Highest priority)
+        if matched_specialization:
+            spec_str = ", ".join(matched_specialization[:2])
+            sentences.append(
+                f"Your focus on {spec_str} aligns directly with the core objectives of the {role_title} pathway."
+            )
 
-    # 2. Interests alignment
-    if matched_interests:
-        int_str = ", ".join(matched_interests[:2])
-        sentences.append(
-            f"Your stated interest in {int_str} aligns well with this {sector} livelihood track."
-        )
+        # 2. Occupation & Skills alignment
+        # ONLY cite current occupation if it actually matched this role!
+        if occupation_matched and current_occupation and current_occupation.lower() not in {"none", "homemaker", "unemployed", "student", "fresher"}:
+            if skills_already_have:
+                skill_str = ", ".join(skills_already_have[:2])
+                sentences.append(
+                    f"Your practical experience in {current_occupation} and recorded skills in {skill_str} provide a strong foundation for this role."
+                )
+            else:
+                sentences.append(
+                    f"Your practical experience in {current_occupation} provides a strong foundation for this role."
+                )
+        elif skills_already_have:
+            skill_str = ", ".join(skills_already_have[:2])
+            sentences.append(
+                f"Your recorded skills in {skill_str} provide a strong foundation for the {role_title} role."
+            )
 
-    # 3. Experience alignment
-    if experience_years and experience_years > 0:
+        # 3. Interests alignment
+        if matched_interests:
+            int_str = ", ".join(matched_interests[:2])
+            sentences.append(
+                f"Matches your stated interest in {int_str} within the {sector} sector."
+            )
+
+    # 4. Relevant experience alignment (ONLY if occupation matched, or informal/domestic background with matched skills!)
+    occ_name = (current_occupation or "").lower().strip()
+    is_informal = occ_name in {"", "none", "homemaker", "student", "unemployed", "fresher"}
+    has_relevant_exp = (
+        experience_years
+        and experience_years > 0
+        and (occupation_matched or (is_informal and skills_already_have))
+    )
+    if has_relevant_exp:
         exp_val = int(experience_years) if experience_years.is_integer() else experience_years
         sentences.append(
-            f"Your {exp_val} years of practical experience will help you accelerate through the curriculum."
+            f"Your {exp_val} years of practical experience in this field will help you accelerate through the curriculum."
         )
 
-    # 4. Actionable skill gaps / training advice
+    # 5. Actionable skill gaps / training advice
     if skill_gaps:
         gaps_str = ", ".join(skill_gaps[:2])
         sentences.append(
@@ -142,7 +201,7 @@ def _build_grounded_explanation(
             "You already demonstrate strong baseline competence across the core requirements."
         )
 
-    # 5. Employment preference caveat (if recommended despite mismatch)
+    # 6. Employment preference caveat (if recommended despite mismatch)
     if preference_caveat:
         sentences.append(preference_caveat)
 
@@ -150,6 +209,9 @@ def _build_grounded_explanation(
         return f"This {sector} pathway provides accredited skilling aligned with entry-level NSQF standards."
 
     return " ".join(sentences)
+
+
+MIN_RECOMMENDATION_SCORE = 0.10
 
 
 def generate_recommendations(
@@ -176,20 +238,61 @@ def generate_recommendations(
     all_roles = get_all_roles()
     scored_results = match_profile(profile, roles=all_roles)
 
-    # Filter to roles that have meaningful relevance (score > 0.0)
-    positive_matches = [r for r in scored_results if r.score > 0.0]
+    has_stated_intent = bool(
+        (profile.interests and any(i.strip() for i in profile.interests))
+        or (profile.preferred_specialization and profile.preferred_specialization.strip())
+    )
 
-    # If the user profile is empty or has zero matching signals, handle safely:
-    # Return empty recommendations list so caller knows no meaningful match was made.
-    if not positive_matches:
-        logger.info("No matching roles found with score > 0.0 for given profile.")
+    # Require genuine profile-role relevance.
+    # A role is ONLY recommended if there is genuine semantic evidence connecting
+    # the user's profile to the role, with a score of at least MIN_RECOMMENDATION_SCORE.
+    def _is_meaningful_match(r) -> bool:
+        if r.score < MIN_RECOMMENDATION_SCORE:
+            return False
+
+        has_skills = bool(r.matched_skills and len(r.matched_skills) > 0)
+        has_interests = bool(r.matched_interests and len(r.matched_interests) > 0)
+        has_spec = bool(getattr(r, "matched_specialization", None) and len(r.matched_specialization) > 0)
+        has_occ = getattr(r, "occupation_matched", False)
+
+        if not (has_skills or has_interests or has_spec or has_occ):
+            return False
+
+        # Holistic intent alignment: If the user expressed concrete interests or specialization,
+        # roles matching them are primary pathways.
+        # Roles from other domains are only eligible as alternative pathways if the user possesses
+        # at least 2 distinct recorded skills that genuinely match the role requirements.
+        if has_stated_intent:
+            aligned_with_intent = has_interests or has_spec or has_occ
+            if not aligned_with_intent:
+                # Strong evidence required for alternative pathway:
+                # An incidental single skill is NEVER enough to recommend an alternative pathway.
+                role = get_role_by_id(r.role_id)
+                if not role:
+                    return False
+                user_matching_skills = [
+                    u for u in profile.skills
+                    if any(_skill_match(u, req) for req in role.required_skills)
+                ]
+                if len(user_matching_skills) < 2 or len(r.matched_skills) < 2:
+                    return False
+
+        return True
+
+    relevant_matches = [r for r in scored_results if _is_meaningful_match(r)]
+
+    # If the user profile has zero meaningful matches, return empty list
+    if not relevant_matches:
+        logger.info("No meaningful matching roles found for given profile.")
         return RecommendationsResponse(
             total_evaluated=len(all_roles),
             total_recommended=0,
             recommendations=[],
         )
 
-    top_results = positive_matches[:max_recommendations]
+    # Do not force 3 recommendations: return UP TO 3 genuinely relevant roles.
+    # If only 1 is relevant, return 1. If 2 are relevant, return 2.
+    top_results = relevant_matches[:max_recommendations]
     recommendations: list[RoleRecommendation] = []
 
     for r in top_results:
@@ -202,18 +305,24 @@ def generate_recommendations(
             u for u in profile.skills
             if any(_skill_match(u, req) for req in role.required_skills)
         ]
-        # If user skills didn't match directly by user term, include role's matched term
-        if not skills_already_have and r.matched_skills:
-            skills_already_have = list(r.matched_skills)
 
         skills_to_develop = list(r.skill_gaps)
 
-        # Experience alignment description
-        if profile.experience_years and profile.experience_years > 0:
+        # Experience alignment description:
+        # A user's years of experience in a formal occupation must NOT transfer to an unrelated occupation!
+        occ_name = (profile.current_occupation or "").lower().strip()
+        is_informal = occ_name in {"", "none", "homemaker", "student", "unemployed", "fresher"}
+        has_relevant_exp = (
+            profile.experience_years
+            and profile.experience_years > 0
+            and (getattr(r, "occupation_matched", False) or (is_informal and skills_already_have))
+        )
+
+        if has_relevant_exp:
             exp_val = int(profile.experience_years) if profile.experience_years.is_integer() else profile.experience_years
             exp_align = f"{exp_val} years of practical experience provides a strong foundation for vocational progression."
         else:
-            exp_align = "Entry-level accessible role; no prior formal work experience required."
+            exp_align = "Entry-level accessible role; no prior formal work experience in this sector required."
 
         # Preference alignment description & caveat
         pref_align, pref_caveat = _evaluate_preference_alignment(
@@ -222,16 +331,28 @@ def generate_recommendations(
             role_employment_type=role.employment_type,
         )
 
+        # Determine pathway type:
+        aligned_with_intent = bool(
+            r.matched_interests
+            or getattr(r, "matched_specialization", None)
+            or getattr(r, "occupation_matched", False)
+        )
+        match_type = "primary" if (aligned_with_intent or not has_stated_intent) else "alternative"
+
         # Grounded factual explanation
         explanation = _build_grounded_explanation(
             role_title=role.title,
             sector=role.sector,
-            matched_skills=r.matched_skills,
+            skills_already_have=skills_already_have,
             matched_interests=r.matched_interests,
+            matched_specialization=getattr(r, "matched_specialization", None),
             experience_years=profile.experience_years,
             current_occupation=profile.current_occupation,
+            current_activity=getattr(profile, "current_activity", None),
+            occupation_matched=getattr(r, "occupation_matched", False),
             skill_gaps=skills_to_develop,
             preference_caveat=pref_caveat,
+            match_type=match_type,
         )
 
         # Training pathway grounded in knowledge base
@@ -264,9 +385,11 @@ def generate_recommendations(
             match_percentage=match_pct,
             matched_skills=r.matched_skills,
             matched_interests=r.matched_interests,
+            matched_specialization=getattr(r, "matched_specialization", []),
             skills_already_have=skills_already_have,
             skills_to_develop=skills_to_develop,
             skill_gaps=skills_to_develop,
+            match_type=match_type,
             experience_alignment=exp_align,
             preference_alignment=pref_align,
             explanation=explanation,

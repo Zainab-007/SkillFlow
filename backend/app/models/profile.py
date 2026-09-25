@@ -23,7 +23,11 @@ class UserProfile(BaseModel):
     )
     current_occupation: Optional[str] = Field(
         default=None,
-        description="Current or most recent occupation (e.g. 'Tailoring', 'Farming')",
+        description="Current or most recent occupation (e.g. 'Tailoring', 'Farming', 'Student')",
+    )
+    current_activity: Optional[str] = Field(
+        default=None,
+        description="Current ongoing work or practical activity (e.g. 'Software / Project Development')",
     )
     experience_years: Optional[float] = Field(
         default=None,
@@ -37,6 +41,10 @@ class UserProfile(BaseModel):
     interests: list[str] = Field(
         default_factory=list,
         description="Interests or domains the user wants to work in",
+    )
+    preferred_specialization: Optional[str] = Field(
+        default=None,
+        description="Preferred specialized domain or career focus (e.g. 'Backend Development')",
     )
     mobility_constraint: Optional[str] = Field(
         default=None,

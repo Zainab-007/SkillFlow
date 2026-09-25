@@ -77,9 +77,11 @@ class ProfileUpdate(BaseModel):
     """
     education: Optional[str] = None
     current_occupation: Optional[str] = None
+    current_activity: Optional[str] = None
     experience_years: Optional[float] = None
     skills: Optional[list[str]] = None
     interests: Optional[list[str]] = None
+    preferred_specialization: Optional[str] = None
     mobility_constraint: Optional[str] = None
     employment_preference: Optional[str] = None
     location: Optional[str] = None

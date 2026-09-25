@@ -44,9 +44,9 @@ export default function ResultsPage({
     );
   }
 
-  // Helper for formatting list
   const formatList = (val) => (Array.isArray(val) && val.length > 0 ? val : null);
   const userSkills = formatList(profile.skills);
+  const userInterests = formatList(profile.interests);
 
   return (
     <div className="results-card" aria-labelledby="results-title">
@@ -89,18 +89,56 @@ export default function ResultsPage({
         className="profile-summary-grid"
         style={{ marginBottom: '2.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
       >
-        <div className="summary-card">
-          <div className="summary-card-label">{isHindi ? 'वर्तमान कार्य' : 'Current Work'}</div>
-          <div className="summary-card-value">
-            {profile.current_occupation || (isHindi ? 'उल्लेख नहीं' : 'Not specified')}
+        {profile.current_occupation && (
+          <div className="summary-card">
+            <div className="summary-card-label">{isHindi ? 'वर्तमान व्यवसाय' : 'Current Occupation'}</div>
+            <div className="summary-card-value">
+              {profile.current_occupation}
+            </div>
           </div>
-        </div>
+        )}
+
+        {profile.current_activity && (
+          <div className="summary-card">
+            <div className="summary-card-label">{isHindi ? 'वर्तमान गतिविधि' : 'Current Activity'}</div>
+            <div className="summary-card-value">
+              {profile.current_activity}
+            </div>
+          </div>
+        )}
+
+        {(!profile.current_occupation && !profile.current_activity) && (
+          <div className="summary-card">
+            <div className="summary-card-label">{isHindi ? 'वर्तमान कार्य' : 'Current Work'}</div>
+            <div className="summary-card-value">
+              {isHindi ? 'उल्लेख नहीं' : 'Not specified'}
+            </div>
+          </div>
+        )}
+
+        {userInterests && (
+          <div className="summary-card">
+            <div className="summary-card-label">{isHindi ? 'रुचि' : 'Interest'}</div>
+            <div className="summary-card-value">
+              {userInterests.join(', ')}
+            </div>
+          </div>
+        )}
+
+        {profile.preferred_specialization && (
+          <div className="summary-card">
+            <div className="summary-card-label">{isHindi ? 'विशेषज्ञता' : 'Specialization'}</div>
+            <div className="summary-card-value">
+              {profile.preferred_specialization}
+            </div>
+          </div>
+        )}
 
         <div className="summary-card">
           <div className="summary-card-label">{isHindi ? 'कार्य अनुभव' : 'Experience'}</div>
           <div className="summary-card-value">
             {profile.experience_years !== undefined && profile.experience_years !== null
-              ? `${profile.experience_years} ${isHindi ? 'वर्ष' : 'years'}`
+              ? `${Number(profile.experience_years)} ${isHindi ? 'वर्ष' : 'years'}`
               : isHindi
                 ? 'शुरुआती'
                 : 'Entry / None'}
@@ -124,7 +162,22 @@ export default function ResultsPage({
         <div className="summary-card">
           <div className="summary-card-label">{isHindi ? 'कार्य प्राथमिकता' : 'Preference'}</div>
           <div className="summary-card-value">
-            {profile.employment_preference || (isHindi ? 'सामान्य' : 'Flexible')}
+            {profile.employment_preference
+              ? (isHindi
+                  ? (profile.employment_preference.toLowerCase().includes('wage')
+                      ? 'वेतन रोजगार (नौकरी)'
+                      : profile.employment_preference.toLowerCase().includes('self')
+                        ? 'स्वरोजगार (व्यवसाय)'
+                        : 'लचीला / दोनों')
+                  : profile.employment_preference)
+              : (isHindi ? 'सामान्य' : 'Flexible')}
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-card-label">{isHindi ? 'कार्य परिवेश' : 'Work Setting'}</div>
+          <div className="summary-card-value">
+            {profile.mobility_constraint || (isHindi ? 'स्थानीय / लचीला' : 'Local / Flexible')}
           </div>
         </div>
 
@@ -147,7 +200,11 @@ export default function ResultsPage({
         <div className="recommendations-header-wrap">
           <h2 className="recommendations-title">
             <span>🎯</span>
-            <span>{isHindi ? 'शीर्ष अनुशंसित भूमिकाएं (Top 3)' : 'Top 3 Recommended Roles'}</span>
+            <span>
+              {isHindi
+                ? (recommendations.length > 0 ? `अनुशंसित भूमिकाएं (${recommendations.length})` : 'अनुशंसित भूमिकाएं')
+                : (recommendations.length > 0 ? `Recommended Roles (${recommendations.length})` : 'Recommended Roles')}
+            </span>
           </h2>
           <p className="recommendations-subtitle">
             {isHindi
@@ -162,6 +219,7 @@ export default function ResultsPage({
               const isFirst = index === 0;
               const matchPct = rec.match_percentage || Math.round(rec.match_score * 100);
               const scoreClass = matchPct >= 65 ? 'high' : 'medium';
+              const isPrefMismatch = rec.preference_alignment && rec.preference_alignment.toLowerCase().includes('rather than');
 
               return (
                 <article
@@ -179,11 +237,30 @@ export default function ResultsPage({
                         {rec.role_title}
                       </h3>
                       <div className="card-meta-chips">
+                        {rec.match_type === 'alternative' && (
+                          <span
+                            className="chip-pref"
+                            style={{
+                              background: 'rgba(234, 179, 8, 0.15)',
+                              color: '#b45309',
+                              border: '1px solid rgba(234, 179, 8, 0.35)',
+                              fontWeight: 600,
+                            }}
+                          >
+                            ⚡ {isHindi ? 'वैकल्पिक मार्ग — कौशल आधारित' : 'Alternative Pathway — Skill-based'}
+                          </span>
+                        )}
                         <span className="chip-sector">{rec.sector}</span>
                         <span className="chip-nsqf">NSQF Level {rec.nsqf_level}</span>
                         <span className="chip-sector" style={{ fontSize: '0.75rem' }}>
                           QP: {rec.pathway?.qp_code || rec.role_id}
                         </span>
+                        {rec.preference_alignment && (
+                          <span className={`chip-pref ${isPrefMismatch ? 'mismatch' : 'aligned'}`}>
+                            {isPrefMismatch ? '⚠️ ' : '✓ '}
+                            {rec.preference_alignment}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -292,10 +369,23 @@ export default function ResultsPage({
             })}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--slate-500)' }}>
-            {isHindi
-              ? 'दिए गए विवरण के लिए कोई विशिष्ट भूमिका मेल नहीं खाती। कृपया अधिक जानकारी के साथ पुनः प्रयास करें।'
-              : 'No matching roles found for this profile. Please try starting a new interview with more skill details.'}
+          <div className="no-matches-card" style={{
+            textAlign: 'center',
+            padding: '3rem 2rem',
+            background: 'var(--slate-50, #f8fafc)',
+            borderRadius: '1rem',
+            border: '1px dashed var(--slate-300, #cbd5e1)',
+            margin: '1.5rem 0'
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📋</div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--slate-800, #1e293b)', marginBottom: '0.75rem' }}>
+              {isHindi ? 'कोई उपयुक्त व्यावसायिक मार्ग नहीं मिला' : 'No Direct NSQF Pathway Found'}
+            </h3>
+            <p style={{ color: 'var(--slate-600, #475569)', maxWidth: '540px', margin: '0 auto 1.5rem auto', lineHeight: 1.6 }}>
+              {isHindi
+                ? 'वर्तमान 23-भूमिका ज्ञान आधार में आपकी पृष्ठभूमि के लिए कोई प्रत्यक्ष सरकारी व्यावसायिक प्रमाणन नहीं मिला। कृपया अपने व्यावहारिक कौशल का अधिक विवरण जोड़कर या संबंधित क्षेत्रों की खोज करके पुनः प्रयास करें।'
+                : 'The current curated knowledge base does not contain an accredited short-term NSQF pathway directly matching your stated background. Try exploring related vocational trades or providing additional practical skills.'}
+            </p>
           </div>
         )}
       </section>
