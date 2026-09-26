@@ -80,11 +80,12 @@ Interactive API docs: **http://localhost:8000/docs**
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/health` | Health check |
-| GET | `/api/knowledge/roles` | List all 20 NSQF roles |
+| GET | `/api/knowledge/roles` | List all 23 NSQF roles |
 | GET | `/api/knowledge/roles/{role_id}` | Get a single role by ID (e.g. `T-001`) |
 | GET | `/api/knowledge/sectors` | List sectors and role counts |
 | POST | `/api/match` | Match a user profile to roles (deterministic) |
 | POST | `/api/conversation` | Process one conversational turn with Gemini LLM |
+| POST | `/api/recommendations` | Generate top 3 explainable NSQF pathways |
 
 ---
 
@@ -141,13 +142,13 @@ curl -X POST http://localhost:8000/api/match \
 
 ## Running tests
 
-From the root or `backend/` directory:
+From the `backend/` directory:
 
 ```bash
-pytest backend/tests/ -v
+python -m pytest
 ```
 
-All 43 unit and integration tests (21 knowledge/matching + 22 conversation engine) run with Gemini API calls mocked, so no live API key is required during testing.
+All 77 unit and integration tests (across API, conversation, recommendations, and regression suites) run with Gemini API calls mocked, so no live API key is required during testing.
 
 ---
 
@@ -162,15 +163,20 @@ backend/
 │   ├── models/
 │   │   ├── conversation.py     # Request, Response, and LLM output schemas
 │   │   ├── profile.py          # UserProfile Pydantic model
+│   │   ├── recommendation.py   # RecommendationsResponse & TrainingPathway models
 │   │   └── role.py             # LivelihoodRole + related Pydantic models
 │   ├── services/
 │   │   ├── conversation.py     # Gemini LLM interview engine & session store
 │   │   ├── knowledge_base.py   # Loads data/nsqf_roles.json (single source of truth)
-│   │   └── matching.py         # Deterministic keyword skill-matching service
+│   │   ├── matching.py         # Deterministic keyword skill-matching service
+│   │   └── recommendations.py  # Grounded pathway recommendations & explainability
 │   └── routes/
 │       ├── conversation.py     # POST /api/conversation
-│       └── knowledge.py        # /api/health, /api/knowledge/*, /api/match
+│       ├── knowledge.py        # /api/health, /api/knowledge/*, /api/match
+│       └── recommendations.py  # POST /api/recommendations
 └── tests/
     ├── test_api.py             # Knowledge base & deterministic matching tests
-    └── test_conversation.py    # Conversation engine mocked tests
+    ├── test_conversation.py    # Conversation engine mocked tests
+    ├── test_recommendations.py # Top 3 pathway & explainability tests
+    └── test_software_profile_regression.py # Regression & alternative pathway tests
 ```

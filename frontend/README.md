@@ -87,8 +87,8 @@ Voice is strictly an enhancement. The application remains 100% usable on all bro
 
 ---
 
-## Current MVP Limitations
+## Current MVP Capabilities & Future Directions
 
 - **Browser-Native Web Speech**: Relies on browser-provided speech recognition and text-to-speech models rather than specialized low-resource dialect STT/TTS servers (e.g. Bhashini / Whisper).
-- **Languages**: Currently supports English and Hindi. Regional languages (e.g. Marathi) will be added in future stages.
-- **Recommendations Preview**: The current Results Page displays the synthesized profile. Integration with the deterministic NSQF matching endpoint will be connected in the subsequent phase.
+- **Languages**: Currently supports English and Hindi. Regional languages (e.g. Marathi, Bengali, Tamil) are planned for future phases.
+- **Recommendations Integration**: The Results Page is fully integrated with `/api/recommendations`, displaying up to 3 genuinely relevant NSQF pathways (0 if none meet the relevance threshold, 1 to 3 depending on actual match quality, with no padding of unrelated roles) alongside match percentages, grounded rationales, side-by-side skill gap analyses, and accredited training pathways.
