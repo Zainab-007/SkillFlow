@@ -2,8 +2,11 @@
 SkillFlow — FastAPI application entry point.
 
 Start the server from the backend/ directory:
+# From the backend directory:
+cd backend
+..\.venv\Scripts\activate
+uvicorn app.main:app --reload
 
-    uvicorn app.main:app --reload
 
 The knowledge base is validated at startup so any data file issues are
 reported immediately rather than on the first request.
